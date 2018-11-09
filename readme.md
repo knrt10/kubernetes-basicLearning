@@ -1,6 +1,40 @@
 ## Learning Kubernetes
 
-This is just a simple demonstration to get basic understanding how kubernetes works while working step by step.
+This is just a simple demonstration to get a basic understanding of how kubernetes works while working step by step.
+
+## Contents
+
+1. [Requirements](#requirements)
+2. **Docker**
+   - [What is docker](#what-is-docker?)
+   - [Creating a web server](#creating-a-web-server)
+   - [Building docker image](#building-docker-image)
+   - [Getting docker images](#getting-docker-images)
+   - [Running the container image](#running-the-container-image)
+   - [Accessing your application](#accessing-your-application)
+   - [Listing all your running containers](#listing-all-your-running-containers)
+   - [Running a shell inside an existing container](#running-a-shell-inside-an-existing-container)
+      - [Exploring container from within](#exploring-container-from-within)
+   - [Stopping and removing a container](#stopping-and-removing-a-container)
+   - [Pushing the image to an image registry](#pushing-the-image-to-an-image-registry)
+      - [Pushing image to docker hub](#pushing-image-to-docker-hub)
+3. **Kubernetes**
+    - [Working with Kubernetes](#working-with-kubernetes)   
+    - [Setting up a Kubernetes cluster](#setting-up-a-kubernetes-cluster)
+    - [Running a local single node Kubernetes cluster with Minikube](#running-a-local-single-node-kubernetes-cluster-with-minikube)   
+        - [Starting a Kubernetes cluster with minikube](#starting-a-kubernetes-cluster-with-minikube)
+    - [Checking Status of cluster](#checking-to-see-if-the-cluster-is-up-and-kubernetes-can-talk-to-it)
+    - [Deploying your Node app](#deploying-your-node-app)
+    - [Listing Pods](#listing-pods)
+    - [Accessing your web application](#accessing-your-web-application)
+        - [Creating a service object](#creating-a-service-object)
+        - [Listing Services](#listing-services)
+    - [Horizontally scaling the application](#horizontally-scaling-the-application)
+        - [Increasing the desired Replica count](#increasing-the-desired-replica-count)
+        - [Seeing the result of the Scale Out](#seeing-the-result-of-the-scale-out)
+    - [Displaying the Pod IP and Pods Node when listing Pods](#displaying-the-pod-ip-and-pods-node-when-listing-pods)
+    - [Accessing Dashboard when using Minikube](#accessing-dashboard-when-using-minikube)
+
 
 ## Requirements
 
@@ -8,18 +42,20 @@ This is just a simple demonstration to get basic understanding how kubernetes wo
 - [minikube](https://github.com/kubernetes/minikube) installed for running locally
 - [kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl/) installed.
 
-## Simple conepts before we start
+## Simple concepts before we start
 
-#### What is docker
+#### What is docker?
 
-Docker is platform for packaging, distribution and running applications. It allows you to package your application together with its whole environment. This can be either a few libraries that the app requires or even all the files that are usually available on the filesystem of an installed operating system. Docker makes it possible to transfer this package to a central repository from which it can then be transferred to any computer running Docker and executed there
+Docker is a platform for packaging, distribution and running applications. It allows you to package your application together with its whole environment. This can be either a few libraries that the app requires or even all the files that are usually available on the filesystem of an installed operating system. Docker makes it possible to transfer this package to a central repository from which it can then be transferred to any computer running Docker and executed there
 
 Three main concepts in Docker comprise this scenario:
 - **Images** :— A Docker based container image is something you package your application and its environment into. It contains the filesystem that will be available to the application and other metadata, such as the path to the executable that should be executed when the image is run.
-- **Registries** :- A Docker Registry is a repository that stores your Docker images and facilitates easy sharing of those images between different people and computers. When you build your image, you can either run it on the computer you’ve built it on, or you can push (upload) the image to a registry and then pull (download) it on another computer and run it there. Certain registries are pub- lic, allowing anyone to pull images from it, while others are private, only accessi- ble to certain people or machines.
-- **Containers** :- A Docker-based container is a regular Linux container created from a Docker-based container image. A running container is a process running on the host running Docker, but it’s completely isolated from both the host and all other processes running on it. The process is also resource-constrained, meaning it can only access and use the amount of resources (CPU, RAM, and so on) that are allocated to it.
+- **Registries** :- A Docker Registry is a repository that stores your Docker images and facilitates easy sharing of those images between different people and computers. When you build your image, you can either run it on the computer you’ve built it on, or you can push (upload) the image to a registry and then pull (download) it on another computer and run it there. Certain registries are public, allowing anyone to pull images from it, while others are private, only accessible to certain people or machines.
+- **Containers** :- A Docker-based container is a regular Linux container created from a Docker-based container image. A running container is a process running on the host running Docker, but it’s completely isolated from both the host and all other processes running on it. The process is also resource-constrained, meaning it can only access and use the number of resources (CPU, RAM, and so on) that are allocated to it.
 
 ## Learning while working
+
+#### Creating a web server
 
 You first need to create a container image. We will use docker for that. We are creating a simple web server to see how kubernetes works.
 
@@ -39,12 +75,12 @@ www.listen(8080);
 
 ```
 
-Now we will create a docker file that will run on cluster when we create a docker image. 
+Now we will create a docker file that will run on a cluster when we create a docker image. 
 
 - create a file named `Dockerfile` and copy this code into it.
 
-```docker
-FROM node:8
+```Dockerfile
+FROM node:8 
 
 RUN npm i
 
@@ -56,13 +92,13 @@ ENTRYPOINT [ "node", "app.js" ]
 
 #### Building docker image
 
-Make sure your **docker server is up and running**. Now we will create a docker image in our local machine. Open your terminal in current project's folder and run
+Make sure your **docker server is up and running**. Now we will create a docker image in our local machine. Open your terminal in the current project's folder and run
 
 `docker build -t kubia .`
 
 You’re telling Docker to build an image called **kubia** based on the contents of the current directory (note the dot at the end of the build command). Docker will look for the Dockerfile in the directory and build the image based on the instructions in the file.
 
-Now check the your docker image created by running
+Now check your docker image created by running
 
 #### Getting docker images
 
@@ -83,7 +119,7 @@ Run in your terminal
 `curl localhost:8080`
 > You’ve hit 44d76963e8e1
 
-#### Lisiting all your running containers
+#### Listing all your running containers
 
 You can list all your running containers by this command.
 
@@ -91,15 +127,15 @@ You can list all your running containers by this command.
 
 The `docker ps` command only shows the most basic information about the containers.
 
-Also to get additional infomation about a container run this command
+Also to get additional information about a container run this command
 
 `docker inspect kubia-container`
 
-You can see all container by
+You can see all the container by
 
 `docker ps -a`
 
-#### Running a shell inside an existing container
+### Running a shell inside an existing container
 
 The Node.js image on which you’ve based your image contains the bash shell, so you can run the shell inside the container like this:
 
@@ -125,7 +161,7 @@ root        16  0.0  0.0  17504  2036 pts/0    R+   06:02   0:00 ps aux
 You see only three processes. You don’t see any other processes from the host OS.
 
 
-Like having an isolated process tree, each container also has an isolated filesystem. Listing the contents of the root directory inside the container will only show the files in the container and will include all the files that are in the image plus any files that are created while the container is running (log files and similar), as shown in the fol- lowing listing.
+Like having an isolated process tree, each container also has an isolated filesystem. Listing the contents of the root directory inside the container will only show the files in the container and will include all the files that are in the image plus any files that are created while the container is running (log files and similar), as shown in the following listing.
 
 ```bash
 root@c61b9b509f9a:/# ls
@@ -138,13 +174,13 @@ It contains the **app.js** file and other system directories that are part of th
 
 `docker stop kubia-container`
 
-This will stop the main process running in the container and consequently stop the container, because no other processes are running inside the container. The container itself still exists and you can see it with **docker ps -a**. The -a option prints out all the containers, those running and those that have been stopped. To truly remove a container, you need to remove it with the **docker rm** command:
+This will stop the main process running in the container and consequently stop the container because no other processes are running inside the container. The container itself still exists and you can see it with **docker ps -a**. The -a option prints out all the containers, those running and those that have been stopped. To truly remove a container, you need to remove it with the **docker rm** command:
 
 `docker rm kubia-container`
 
 This deletes the container. All its contents are removed and it can’t be started again.
 
-#### Pushing the image to an image registry
+### Pushing the image to an image registry
 
 The image you’ve built has so far only been available on your local machine. To allow you to run it on any other machine, you need to push the image to an external image registry. For the sake of simplicity, you won’t set up a private image registry and will instead push the image to [Docker Hub](http://hub.docker.com)
 
@@ -172,24 +208,24 @@ Now that you have your app packaged inside a container image and made available 
 
 #### Setting up a Kubernetes cluster
 
-Setting up a full-fledged, multi-node Kubernetes cluster isn’t a simple task, especially if you’re not well-versed in Linux and networking administration. A proper Kubernetes install spans multiple physical or virtual machines and requires the networking to be set up properly, so that all the containers running inside the Kubernetes cluster can connect to each other through the same flat networking space.
+Setting up a full-fledged, multi-node Kubernetes cluster isn’t a simple task, especially if you’re not well-versed in Linux and networking administration. A proper Kubernetes install spans multiple physical or virtual machines and requires the networking to be set up properly so that all the containers running inside the Kubernetes cluster can connect to each other through the same flat networking space.
 
-#### Running a local single-node Kubernetes cluster with Minikube
+### Running a local single node Kubernetes cluster with Minikube
 
 The simplest and quickest path to a fully functioning Kubernetes cluster is by using Minikube. Minikube is a tool that sets up a single-node cluster that’s great for both testing Kubernetes and developing apps locally.
 
-#### Starting a Kubernetes cluster with minkube
+#### Starting a Kubernetes cluster with minikube
 
 Once you have Minikube installed locally, you can immediately start up the Kubernetes cluster with the command in the following listing.
 
 `minikube start`
-> Starting local Kubernetes cluster...
-
-> Starting VM...
-
-> SSH-ing files into VM...
-
-> Kubectl is now configured to use the cluster.
+```bash
+Starting local Kubernetes cluster...
+Starting VM...
+SSH-ing files into VM...
+...
+Kubectl is now configured to use the cluster.
+```
 
 Starting the cluster takes more than a minute, so don’t interrupt the command before
 it completes.
@@ -201,13 +237,17 @@ To interact with Kubernetes, you also need the **kubectl** CLI client. Again, al
 To verify your cluster is working, you can use the **kubectl cluster-info** command shown in the following listing.
 
 `kubectl cluster-info`
-> Kubernetes master is running at https://192.168.99.100:8443
+```bash
+Kubernetes master is running at https://192.168.99.100:8443
 
-> kubernetes-dashboard is running at https://192.168.99.100:8443/api/v1/...
+kubernetes-dashboard is running at https://192.168.99.100:8443/api/v1/...
+
+KubeDNS is running at https://192.168.99.100:8443/api/v1/namespaces/kube-system/services/kube-dns:dns/proxy
+```
 
 This shows the cluster is up. It shows the URLs of the various Kubernetes components, including the API server and the web console.
 
-#### Deploying your Node.js app
+#### Deploying your Node app
 
 The simplest way to deploy your app is to use the **kubectl run** command, which will create all the necessary components without having to deal with JSON or YAML.
 
@@ -217,7 +257,7 @@ The --image=knrt10/kubia part obviously specifies the container image you want t
 
 #### Listing Pods
 
-Because you can’t list individual containers, since they’re not standalone Kubernetes objects, can you list pods instead? Yes, you can. Let’s see how to tell kubectl to list pods in the following listing.
+Because you can’t list individual containers since they’re not standalone Kubernetes objects, can you list pods instead? Yes, you can. Let’s see how to tell kubectl to list pods in the following listing.
 
 `kubectl get pods`
 
@@ -227,9 +267,9 @@ NAME          READY     STATUS    RESTARTS   AGE
 kubia-5k788   1/1       Running   1          7d
 ```
 
-#### Accessing your web application
+### Accessing your web application
 
-With your pod running, how do you access it? Each pod gets its own IP address, but this address is internal to the cluster and isn’t accessible from outside of it. To make the pod accessible from the outside, you’ll expose it through a Service object. You’ll create a special service of type LoadBalancer, because if you create a regular service (a ClusterIP service), like the pod, it would also only be accessible from inside the cluster. By creating a LoadBalancer-type service, an external load balancer will be created and you can connect to the pod through the load balancer’s public IP.
+With your pod running, how do you access it? Each pod gets its own IP address, but this address is internal to the cluster and isn’t accessible from outside of it. To make the pod accessible from the outside, you’ll expose it through a Service object. You’ll create a special service of type LoadBalancer because if you create a regular service (a ClusterIP service), as the pod, it would also only be accessible from inside the cluster. By creating a LoadBalancer-type service, an external load balancer will be created and you can connect to the pod through the load balancer’s public IP.
 
 #### Creating a service object
 
@@ -258,7 +298,7 @@ can access the service by running
 
 `minikube service kubia-http`
 
-#### Horizontally scaling the application
+### Horizontally scaling the application
 
 You now have a running application, monitored and kept running by a Replication-Controller and exposed to the world through a service. Now let’s make additional magic happen.
 One of the main benefits of using Kubernetes is the simplicity with which you can scale your deployments. Let’s see how easy it is to scale up the number of pods. You’ll increase the number of running instances to three.
@@ -281,7 +321,7 @@ To scale up the number of replicas of your pod, you need to change the desired r
 
 You’ve now told Kubernetes to make sure three instances of your pod are always running. Notice that you didn’t instruct Kubernetes what action to take. You didn’t tell it to add two more pods. You only set the new desired number of instances and let Kubernetes determine what actions it needs to take to achieve the requested state.
 
-#### Seeing the result of the Scale-out
+#### Seeing the result of the Scale Out
 
 Back to your replica count increase. Let’s list the ReplicationControllers again to see the updated replica count:
 
@@ -309,7 +349,7 @@ As you can see, scaling an application is incredibly simple. Once your app is ru
 
 Keep in mind that the app itself needs to support being scaled horizontally. Kubernetes doesn’t magically make your app scalable; it only makes it trivial to scale the app up or down.
 
-#### Displaying the Pod IP and and Pod's Node when listing Pods
+#### Displaying the Pod IP and Pods Node when listing Pods
 
 If you’ve been paying close attention, you probably noticed that the **kubectl get pods** command doesn’t even show any information about the nodes the pods are scheduled to. This is because it’s usually not an important piece of information.
 
