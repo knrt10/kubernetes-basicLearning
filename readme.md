@@ -1,6 +1,6 @@
 ## Learning Kubernetes
 
-This is just a simple demonstration how to get basic understanding how kubernetes works while working step by step.
+This is just a simple demonstration to get basic understanding how kubernetes works while working step by step.
 
 ## Requirements
 
@@ -57,6 +57,8 @@ Now check the your docker image created by running
 
 `docker images`
 
+This command lists all the images.
+
 #### Running the container image
 
 `docker run --name kubia-container -p 8080:8080 -d kubia`
@@ -78,13 +80,13 @@ You can list all your running containers by this command.
 
 The `docker ps` command only shows the most basic information about the containers.
 
-You can see all container by
-
-`docker ps -a`
-
 Also to get additional infomation about a container run this command
 
 `docker inspect kubia-container`
+
+You can see all container by
+
+`docker ps -a`
 
 #### Running a shell inside an existing container
 
@@ -92,3 +94,41 @@ The Node.js image on which you’ve based your image contains the bash shell, so
 
 `docker exec -it kubia-container bash`
 
+This will run bash inside the existing **kubia-container** container. The **bash** process will have the same Linux namespaces as the main container process. This allows you to explore the container from within and see how Node.js and your app see the system when running inside the container. The **-it** option is shorthand for two options:
+
+- -i, which makes sure STDIN is kept open. You need this for entering commands into the shell.
+- -t, which allocates a pseudo terminal (TTY).
+
+#### Exploring container from within
+
+Let’s see how to use the shell in the following listing to see the processes running in the container.
+
+```bash
+root@c61b9b509f9a:/# ps aux
+USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+root         1  0.4  1.3 872872 27832 ?        Ssl  06:01   0:00 node app.js
+root        11  0.1  0.1  20244  3016 pts/0    Ss   06:02   0:00 bash
+root        16  0.0  0.0  17504  2036 pts/0    R+   06:02   0:00 ps aux
+```
+
+You see only three processes. You don’t see any other processes from the host OS.
+
+
+Like having an isolated process tree, each container also has an isolated filesystem. Listing the contents of the root directory inside the container will only show the files in the container and will include all the files that are in the image plus any files that are created while the container is running (log files and similar), as shown in the fol- lowing listing.
+
+```bash
+root@c61b9b509f9a:/# ls
+app.js  bin  boot  dev  etc  home  lib  lib64  media  mnt  opt  package-lock.json  proc  root  run  sbin  srv  sys  tmp  usr  var
+```
+
+It contains the **app.js** file and other system directories that are part of the node:8 base image you’re using. To exit the container, you exit the shell by running the **exit** command and you’ll be returned to your host machine (like logging out of an ssh session, for example).
+
+#### Stopping and removing a container
+
+`docker stop kubia-container`
+
+This will stop the main process running in the container and consequently stop the container, because no other processes are running inside the container. The container itself still exists and you can see it with **docker ps -a**. The -a option prints out all the containers, those running and those that have been stopped. To truly remove a container, you need to remove it with the **docker rm** command:
+
+`docker rm kubia-container`
+
+This deletes the container. All its contents are removed and it can’t be started again.
