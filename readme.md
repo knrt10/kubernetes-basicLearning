@@ -56,7 +56,7 @@ ENTRYPOINT [ "node", "app.js" ]
 
 #### Building docker image
 
-Now make sure your **docker server is up and running**. Now we will create a docker image in our local machine. Open your terminal in current project's folder and run
+Make sure your **docker server is up and running**. Now we will create a docker image in our local machine. Open your terminal in current project's folder and run
 
 `docker build -t kubia .`
 
@@ -146,7 +146,7 @@ This deletes the container. All its contents are removed and it can’t be start
 
 #### Pushing the image to an image registry
 
-The image you’ve built has so far only been available on your local machine. To allow you to run it on any other machine, you need to push the image to an external image registry. For the sake of simplicity, you won’t set up a private image registry and will instead push the image to[Docker Hub](http://hub.docker.com)
+The image you’ve built has so far only been available on your local machine. To allow you to run it on any other machine, you need to push the image to an external image registry. For the sake of simplicity, you won’t set up a private image registry and will instead push the image to [Docker Hub](http://hub.docker.com)
 
 Before you do that, you need to re-tag your image according to Docker Hub’s rules. Docker Hub will allow you to push an image if the image’s repository name starts with your Docker Hub ID. You create your Docker Hub ID by registering at [hub-docker](http://hub.docker.com). I’ll use my own ID (knrt10) in the following examples. Please change every occurrence with your own ID.
 
@@ -165,3 +165,58 @@ As you can see, both kubia and knrt10/kubia point to the same image ID, so they�
 Before you can push the image to Docker Hub, you need to log in under your user ID with the **docker login** command. Once you’re logged in, you can finally push the yourid/kubia image to Docker Hub like this:
 
 `docker push knrt10/kubia`
+
+## Working with Kubernetes
+
+Now that you have your app packaged inside a container image and made available through Docker Hub, you can deploy it in a Kubernetes cluster instead of running it in Docker directly. But first, you need to set up the cluster itself.
+
+#### Setting up a Kubernetes cluster
+
+Setting up a full-fledged, multi-node Kubernetes cluster isn’t a simple task, especially if you’re not well-versed in Linux and networking administration. A proper Kubernetes install spans multiple physical or virtual machines and requires the networking to be set up properly, so that all the containers running inside the Kubernetes cluster can connect to each other through the same flat networking space.
+
+#### Running a local single-node Kubernetes cluster with Minikube
+
+The simplest and quickest path to a fully functioning Kubernetes cluster is by using Minikube. Minikube is a tool that sets up a single-node cluster that’s great for both testing Kubernetes and developing apps locally.
+
+#### Starting a Kubernetes cluster with minkube
+
+Once you have Minikube installed locally, you can immediately start up the Kubernetes cluster with the command in the following listing.
+
+`minikube start`
+> Starting local Kubernetes cluster...
+
+> Starting VM...
+
+> SSH-ing files into VM...
+
+> Kubectl is now configured to use the cluster.
+
+Starting the cluster takes more than a minute, so don’t interrupt the command before
+it completes.
+
+#### Checking to see if the cluster is up and kubernetes can talk to it
+
+To interact with Kubernetes, you also need the **kubectl** CLI client. Again, all you need to do is download it and put it on your path. 
+
+To verify your cluster is working, you can use the **kubectl cluster-info** command shown in the following listing.
+
+`kubectl cluster-info`
+> Kubernetes master is running at https://192.168.99.100:8443
+
+> kubernetes-dashboard is running at https://192.168.99.100:8443/api/v1/...
+
+This shows the cluster is up. It shows the URLs of the various Kubernetes components, including the API server and the web console.
+
+#### Deploying your Node.js app
+
+The simplest way to deploy your app is to use the **kubectl run** command, which will create all the necessary components without having to deal with JSON or YAML.
+
+`kubectl run kubia --image=knrt10/kubia --port=8080 --generator=run/v1`
+
+The --image=knrt10/kubia part obviously specifies the container image you want to run, and the --port=8080 option tells Kubernetes that your app is listening on port 8080. The last flag (--generator) does require an explanation, though. Usually, you won’t use it, but you’re using it here so Kubernetes creates a **ReplicationController** instead of a Deployment.
+
+#### Listing Pods
+
+Because you can’t list individual containers, since they’re not standalone Kubernetes objects, can you list pods instead? Yes, you can. Let’s see how to tell kubectl to list pods in the following listing.
+
+`kubectl get pods`
