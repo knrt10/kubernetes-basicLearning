@@ -220,3 +220,112 @@ The --image=knrt10/kubia part obviously specifies the container image you want t
 Because you can’t list individual containers, since they’re not standalone Kubernetes objects, can you list pods instead? Yes, you can. Let’s see how to tell kubectl to list pods in the following listing.
 
 `kubectl get pods`
+
+```bash
+$ kubectl get pods
+NAME          READY     STATUS    RESTARTS   AGE
+kubia-5k788   1/1       Running   1          7d
+```
+
+#### Accessing your web application
+
+With your pod running, how do you access it? Each pod gets its own IP address, but this address is internal to the cluster and isn’t accessible from outside of it. To make the pod accessible from the outside, you’ll expose it through a Service object. You’ll create a special service of type LoadBalancer, because if you create a regular service (a ClusterIP service), like the pod, it would also only be accessible from inside the cluster. By creating a LoadBalancer-type service, an external load balancer will be created and you can connect to the pod through the load balancer’s public IP.
+
+#### Creating a service object
+
+To create the service, you’ll tell Kubernetes to expose the ReplicationController you created earlier:
+
+`kubectl expose rc kubia --type=LoadBalancer --name kubia-http`
+> service "kubia-http" exposed
+
+
+**Important:** We’re using the abbreviation `rc` instead of `replicationcontroller`. Most resource types have an abbreviation like this so you don’t have to type the full name (for example, `po` for `pods`, `svc` for `services`, and so on).
+
+#### Listing Services
+
+The expose command’s output mentions a service called `kubia-http`. Services are objects like Pods and Nodes, so you can see the newly created Service object by running the **kubectl get services | svc** command, as shown in the following listing.
+
+`kubectl get svc`
+
+```bash
+NAME         TYPE           CLUSTER-IP    EXTERNAL-IP   PORT(S)          AGE
+kubernetes   ClusterIP      10.96.0.1     <none>        443/TCP          7d
+kubia-http   LoadBalancer   10.96.99.92   <pending>     8080:30126/TCP   7d
+```
+
+**Important** :- Minikube doesn’t support LoadBalancer services, so the service will never get an external IP. But you can access the service anyway through its external port. So external IP will always be pending in that case. When using Minikube, you can get the IP and port through which you
+can access the service by running 
+
+`minikube service kubia-http`
+
+#### Horizontally scaling the application
+
+You now have a running application, monitored and kept running by a Replication-Controller and exposed to the world through a service. Now let’s make additional magic happen.
+One of the main benefits of using Kubernetes is the simplicity with which you can scale your deployments. Let’s see how easy it is to scale up the number of pods. You’ll increase the number of running instances to three.
+
+Your pod is managed by a ReplicationController. Let’s see it with the kubectl get command:
+
+`kubectl get rc`
+
+```bash
+NAME      DESIRED   CURRENT   READY     AGE
+kubia     1         1         1         7d
+```
+
+#### Increasing the desired Replica count
+
+To scale up the number of replicas of your pod, you need to change the desired replica count on the ReplicationController like this:
+
+`kubectl scale rc kubia --replicas=3`
+> replicationcontroller "kubia" scaled
+
+You’ve now told Kubernetes to make sure three instances of your pod are always running. Notice that you didn’t instruct Kubernetes what action to take. You didn’t tell it to add two more pods. You only set the new desired number of instances and let Kubernetes determine what actions it needs to take to achieve the requested state.
+
+#### Seeing the result of the Scale-out
+
+Back to your replica count increase. Let’s list the ReplicationControllers again to see the updated replica count:
+
+`kubectl get rc`
+
+```bash
+NAME      DESIRED   CURRENT   READY     AGE
+kubia     3         3         3         7d
+```
+
+Because the actual number of pods has already been increased to three (as evident from the CURRENT column), listing all the pods should now show three pods instead of one:
+
+`kubectl get pods`
+
+```bash
+NAME          READY     STATUS    RESTARTS   AGE
+kubia-5k788   1/1       Running   1          7d
+kubia-7zxwj   1/1       Running   1          3d
+kubia-bsksp   1/1       Running   1          3d
+```
+
+As you can see, three pods exist instead of one. Currently running, but if it is pending, it would be ready in a few moments, as soon as the container image is downloaded and the container is started.
+
+As you can see, scaling an application is incredibly simple. Once your app is running in production and a need to scale the app arises, you can add additional instances with a single command without having to install and run additional copies manually.
+
+Keep in mind that the app itself needs to support being scaled horizontally. Kubernetes doesn’t magically make your app scalable; it only makes it trivial to scale the app up or down.
+
+#### Displaying the Pod IP and and Pod's Node when listing Pods
+
+If you’ve been paying close attention, you probably noticed that the **kubectl get pods** command doesn’t even show any information about the nodes the pods are scheduled to. This is because it’s usually not an important piece of information.
+
+But you can request additional columns to display using the **-o wide** option. When listing pods, this option shows the pod’s IP and the node the pod is running on:
+
+`kubectl get pods -o wide`
+
+```bash
+NAME          READY     STATUS    RESTARTS   AGE       IP           NODE
+kubia-5k788   1/1       Running   1          7d        172.17.0.4   minikube
+kubia-7zxwj   1/1       Running   1          3d        172.17.0.5   minikube
+kubia-bsksp   1/1       Running   1          3d        172.17.0.6   minikube
+```
+
+#### Accessing Dashboard when using Minikube
+
+To open the dashboard in your browser when using Minikube to run your Kubernetes cluster, run the following command:
+
+`minikube dashboard`
