@@ -8,7 +8,18 @@ This is just a simple demonstration to get basic understanding how kubernetes wo
 - [minikube](https://github.com/kubernetes/minikube) installed for running locally
 - [kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl/) installed.
 
-## Learning while working.
+## Simple conepts before we start
+
+#### What is docker
+
+Docker is platform for packaging, distribution and running applications. It allows you to package your application together with its whole environment. This can be either a few libraries that the app requires or even all the files that are usually available on the filesystem of an installed operating system. Docker makes it possible to transfer this package to a central repository from which it can then be transferred to any computer running Docker and executed there
+
+Three main concepts in Docker comprise this scenario:
+- **Images** :— A Docker based container image is something you package your application and its environment into. It contains the filesystem that will be available to the application and other metadata, such as the path to the executable that should be executed when the image is run.
+- **Registries** :- A Docker Registry is a repository that stores your Docker images and facilitates easy sharing of those images between different people and computers. When you build your image, you can either run it on the computer you’ve built it on, or you can push (upload) the image to a registry and then pull (download) it on another computer and run it there. Certain registries are pub- lic, allowing anyone to pull images from it, while others are private, only accessi- ble to certain people or machines.
+- **Containers** :- A Docker-based container is a regular Linux container created from a Docker-based container image. A running container is a process running on the host running Docker, but it’s completely isolated from both the host and all other processes running on it. The process is also resource-constrained, meaning it can only access and use the amount of resources (CPU, RAM, and so on) that are allocated to it.
+
+## Learning while working
 
 You first need to create a container image. We will use docker for that. We are creating a simple web server to see how kubernetes works.
 
@@ -132,3 +143,25 @@ This will stop the main process running in the container and consequently stop t
 `docker rm kubia-container`
 
 This deletes the container. All its contents are removed and it can’t be started again.
+
+#### Pushing the image to an image registry
+
+The image you’ve built has so far only been available on your local machine. To allow you to run it on any other machine, you need to push the image to an external image registry. For the sake of simplicity, you won’t set up a private image registry and will instead push the image to[Docker Hub](http://hub.docker.com)
+
+Before you do that, you need to re-tag your image according to Docker Hub’s rules. Docker Hub will allow you to push an image if the image’s repository name starts with your Docker Hub ID. You create your Docker Hub ID by registering at [hub-docker](http://hub.docker.com). I’ll use my own ID (knrt10) in the following examples. Please change every occurrence with your own ID.
+
+Once you know your ID, you’re ready to rename your image, currently tagged as kubia, to knrt10/kubia (replace knrt10 with your own Docker Hub ID):
+
+`docker tag kubia knrt10/kubia`
+
+This doesn’t rename the tag; it creates an additional tag for the same image. You can confirm this by listing the images stored on your system with the docker images command, as shown in the following listing.
+
+`docker images | head`
+
+As you can see, both kubia and knrt10/kubia point to the same image ID, so they’re in fact one single image with two tags.
+
+#### Pushing image to docker hub
+
+Before you can push the image to Docker Hub, you need to log in under your user ID with the **docker login** command. Once you’re logged in, you can finally push the yourid/kubia image to Docker Hub like this:
+
+`docker push knrt10/kubia`
