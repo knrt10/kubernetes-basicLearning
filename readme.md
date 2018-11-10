@@ -1,12 +1,13 @@
 ## Learning Kubernetes
 
-This is just a simple demonstration to get a basic understanding of how kubernetes works while working step by step.
+This is just a simple demonstration to get a basic understanding of how kubernetes works while working step by step. We won't be going into depth about docker :blush: but will see sufficient content to get you basic understanding to learn and work with kuberntes. :v: Hope you enjoy learning. If you like it please give it a :star2:. 
+
 
 ## Contents
 
 1. [Requirements](#requirements)
 2. **Docker**
-   - [What is docker](#what-is-docker?)
+   - [What is docker?](#what-is-docker)
    - [Creating a web server](#creating-a-web-server)
    - [Building docker image](#building-docker-image)
    - [Getting docker images](#getting-docker-images)
@@ -38,6 +39,9 @@ This is just a simple demonstration to get a basic understanding of how kubernet
         - [Examining a YAML descriptor of an existing pod](#examining-a-yaml-descriptor-of-an-existing-pod)
         - [Introducing the main parts of a POD definition](#introducing-the-main-parts-of-a-pod-definition)
         - [Creating a simple YAML descriptor for a pod](#creating-a-simple-yaml-descriptor-for-a-pod)
+        - [Using kubectl create to create the pod](#using-kubectl-create-to-create-the-pod)
+        - [Retrieving a PODs logs with Kubectl logs](#retrieving-a-pods-logs-with-kubectl-logs)
+        - [Forwarding a Local Network to a port in the Pod](#forwarding-a-local-network-to-a-port-in-the-pod)
 
 ## Requirements
 
@@ -47,7 +51,7 @@ This is just a simple demonstration to get a basic understanding of how kubernet
 
 ## Simple concepts before we start
 
-#### What is docker?
+#### What is docker
 
 Docker is a platform for packaging, distribution and running applications. It allows you to package your application together with its whole environment. This can be either a few libraries that the app requires or even all the files that are usually available on the filesystem of an installed operating system. Docker makes it possible to transfer this package to a central repository from which it can then be transferred to any computer running Docker and executed there
 
@@ -399,7 +403,7 @@ Going through all the individual properties in the previous YAML doesn’t make 
 
 #### Creating a simple YAML descriptor for a pod
 
-You’re going to create a file called kubia-manual.yaml (you can create it in any directory you want), or copy from this repo directory, where you’ll find the file inside the [PODS folder](https://github.com/knrt10/kubernetes-basicLearning/blob/master/PODS/kubia-manual.yaml). The following listing shows the entire contents of the file.
+You’re going to create a file called kubia-manual.yaml (you can create it in any directory you want), or copy from this repo, where you’ll find the file with filename [kubia-manual.yaml](https://github.com/knrt10/kubernetes-basicLearning/blob/master/kubia-manual.yaml). The following listing shows the entire contents of the file.
 
 ```yaml
 apiVersion: v1
@@ -416,3 +420,43 @@ spec:
 ```
 
 Let’s examine this descriptor in detail. It conforms to the **v1** version of the Kubernetes API. The type of resource you’re describing is a pod, with the name **kubia-manual**. The pod consists of a single container based on the **knrt10/kubia** image. You’ve also given a name to the container and indicated that it’s listening on port **8080**.
+
+#### Using kubectl create to create the pod
+
+To create the pod from your YAML file, use the **kubectl create** command:
+
+`kubectl create -f kubia-manual.yaml`
+> pod/kubia-manual created
+
+The **kubectl create -f** command is used for creating any resource (not only pods) from a YAML or JSON file.
+
+#### Retrieving a PODs logs with Kubectl logs
+
+Your little Node.js application logs to the process’s standard output. Containerized applications usually log to the standard output and standard error stream instead of writing their logs to files. This is to allow users to view logs of different applications in a simple, standard way.
+
+To see your pod’s log (more precisely, the container’s log) you run the following command on your local machine (no need to ssh anywhere):
+
+`kubectl logs kubia-manual`
+> Kubia server starting...
+
+You haven’t sent any web requests to your Node.js app, so the log only shows a single log statement about the server starting up. As you can see, retrieving logs of an application running in Kubernetes is incredibly simple if the pod only contains a single container.
+
+##### Specifying the container name when getting logs of multiple container pod 
+
+If your pod includes multiple containers, you have to explicitly specify the container name by including the **-c container name** option when running **kubectl logs**. In your kubia-manual pod, you set the container’s name to **kubia**, so if additional containers exist in the pod, you’d have to get its logs like this:
+
+`kubectl logs kubia-manual -c kubia`
+
+Note that you can only retrieve container logs of pods that are still in existence. When a pod is deleted, its logs are also deleted.
+
+#### Forwarding a Local Network to a port in the Pod
+
+When you want to talk to a specific pod without going through a service (for debugging or other reasons), Kubernetes allows you to configure port forwarding to the pod. This is done through the **kubectl port-forward** command. The following command will forward your machine’s local port **8888** to port **8080** of your **kubia-manual** pod:
+
+
+In a different terminal, you can now use curl to send an HTTP request to your pod through the kubectl port-forward proxy running on localhost:8888:
+
+`curl localhost:8888`
+> You've hit kubia-manual
+
+Using port forwarding like this is an effective way to test an individual pod.
