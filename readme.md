@@ -34,7 +34,10 @@ This is just a simple demonstration to get a basic understanding of how kubernet
         - [Seeing the result of the Scale Out](#seeing-the-result-of-the-scale-out)
     - [Displaying the Pod IP and Pods Node when listing Pods](#displaying-the-pod-ip-and-pods-node-when-listing-pods)
     - [Accessing Dashboard when using Minikube](#accessing-dashboard-when-using-minikube)
-
+    - [Pods](#pods)
+        - [Examining a YAML descriptor of an existing pod](#examining-a-yaml-descriptor-of-an-existing-pod)
+        - [Introducing the main parts of a POD definition](#introducing-the-main-parts-of-a-pod-definition)
+        - [Creating a simple YAML descriptor for a pod](#creating-a-simple-yaml-descriptor-for-a-pod)
 
 ## Requirements
 
@@ -369,3 +372,47 @@ kubia-bsksp   1/1       Running   1          3d        172.17.0.6   minikube
 To open the dashboard in your browser when using Minikube to run your Kubernetes cluster, run the following command:
 
 `minikube dashboard`
+
+### Pods
+
+Pods and other Kubernetes resources are usually created by posting a JSON or YAML manifest to the Kubernetes REST API endpoint. Also, you can use other, simpler ways of creating resources, such as the **kubectl run** command, but they usually only allow you to configure a limited set of properties, not all. Additionally, defining all your Kubernetes objects from YAML files makes it possible to store them in a version control system, with all the benefits it brings.
+
+#### Examining a YAML descriptor of an existing pod
+
+ You’ll use the **kubectl get** command with the **-o yaml** option to get the whole YAML definition of the pod, or you can use **-o json** to get the whole JSON definition as shown in the following listing.
+
+`kubectl get po kubia-bsksp -o yaml`
+
+#### Introducing the main parts of a POD definition
+
+The pod definition consists of a few parts. First, there’s the Kubernetes API version used in the YAML and the type of resource the YAML is describing. Then, three important sections are found in almost all Kubernetes resources:
+
+- **Metadata** includes the name, namespace, labels, and other information about the pod.
+- **Spec** contains the actual description of the pod’s contents, such as the pod’s containers, volumes, and other data.
+- **Status** contains the current information about the running pod, such as what condition the pod is in, the description and status of each container, and the pod’s internal IP and other basic info.
+
+The status part contains read-only runtime data that shows the state of the resource at a given moment. When creating a new pod, you never need to provide the status part.
+
+The three parts described previously show the typical structure of a Kubernetes API object. All other objects have the same anatomy. This makes understanding new objects relatively easy.
+
+Going through all the individual properties in the previous YAML doesn’t make much sense, so, instead, let’s see what the most basic YAML for creating a pod looks like.
+
+#### Creating a simple YAML descriptor for a pod
+
+You’re going to create a file called kubia-manual.yaml (you can create it in any directory you want), or copy from this repo directory, where you’ll find the file inside the [PODS folder](https://github.com/knrt10/kubernetes-basicLearning/blob/master/PODS/kubia-manual.yaml). The following listing shows the entire contents of the file.
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: kubia-manual
+spec:
+  containers:
+  - image: knrt10/kubia
+    name: kubia
+    ports:
+    - containerPort: 8080
+      protocol: TCP
+```
+
+Let’s examine this descriptor in detail. It conforms to the **v1** version of the Kubernetes API. The type of resource you’re describing is a pod, with the name **kubia-manual**. The pod consists of a single container based on the **knrt10/kubia** image. You’ve also given a name to the container and indicated that it’s listening on port **8080**.
