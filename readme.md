@@ -42,6 +42,9 @@ This is just a simple demonstration to get a basic understanding of how kubernet
         - [Using kubectl create to create the pod](#using-kubectl-create-to-create-the-pod)
         - [Retrieving a PODs logs with Kubectl logs](#retrieving-a-pods-logs-with-kubectl-logs)
         - [Forwarding a Local Network to a port in the Pod](#forwarding-a-local-network-to-a-port-in-the-pod)
+        - [Introducing labels](#introducing-labels)
+            - [Specifying labels when creating a pod](#specifying-labels-when-creating-a-pod)
+            - [Modifying labels of existing pods](#modifying-labels-of-existing-pods)
 
 ## Requirements
 
@@ -403,7 +406,7 @@ Going through all the individual properties in the previous YAML doesn’t make 
 
 #### Creating a simple YAML descriptor for a pod
 
-You’re going to create a file called kubia-manual.yaml (you can create it in any directory you want), or copy from this repo, where you’ll find the file with filename [kubia-manual.yaml](https://github.com/knrt10/kubernetes-basicLearning/blob/master/kubia-manual.yaml). The following listing shows the entire contents of the file.
+You’re going to create a file called **kubia-manual.yaml** (you can create it in any directory you want), or copy from this repo, where you’ll find the file with filename [kubia-manual.yaml](https://github.com/knrt10/kubernetes-basicLearning/blob/master/kubia-manual.yaml). The following listing shows the entire contents of the file.
 
 ```yaml
 apiVersion: v1
@@ -460,3 +463,60 @@ In a different terminal, you can now use curl to send an HTTP request to your po
 > You've hit kubia-manual
 
 Using port forwarding like this is an effective way to test an individual pod.
+
+#### Introducing labels
+
+Organizing pods and all other Kubernetes objects is done through labels. Labels are a simple, yet incredibly powerful, Kubernetes feature for organizing not only pods, but all other Kubernetes resources. A label is an arbitrary key-value pair you attach to a resource, which is then utilized when selecting resources using label selectors (resources are filtered based on whether they include the label specified in the selector). 
+
+#### Specifying labels when creating a pod
+
+Now, you’ll see labels in action by creating a new pod with two labels. Create a new file called **kubia-manual-with-labels.yaml** with the contents of the following listing. You can also copy from [kubia-manual-with-labels.yaml](https://github.com/knrt10/kubernetes-basicLearning/blob/master/kubia-manual-with-labels.yaml)
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: kubia-manual-v2
+  labels:
+    creation_method: manual
+    env: prod
+spec:
+  containers:
+  - image: knrt10/kubia
+    name: kubia
+    ports:
+    - containerPort: 8080
+      protocol: TCP
+```
+
+You’ve included the labels *creation_method=manual* and *env=data.labels* section. You’ll create this pod now:
+
+`kubectl create -f kubia-manual-with-labels.yaml`
+> pod/kubia-manual-v2 created
+
+The **kubectl get po** command doesn’t list any labels by default, but you can see them by using the **--show-labels** switch:
+
+`kubectl get po --show-labels`
+
+```bash
+NAME              READY     STATUS    RESTARTS   AGE       LABELS
+kubia-5k788       1/1       Running   1          8d        run=kubia
+kubia-7zxwj       1/1       Running   1          5d        run=kubia
+kubia-bsksp       1/1       Running   1          5d        run=kubia
+kubia-manual      1/1       Running   0          7h        <none>
+kubia-manual-v2   1/1       Running   0          3m        creation_method=manual,env=prod
+```
+
+Instead of listing all labels, if you’re only interested in certain labels, you can specify them with the **-L** switch and have each displayed in its own column. List pods again and show the columns for the two labels you’ve attached to your **kubia-manual-v2** pod:
+
+`kubectl get po -L creation_method,env`
+
+#### Modifying labels of existing pods
+
+Labels can also be added to and modified on existing pods. Because the **kubia-manual** pod was also created manually, let’s add the **creation_method=manual** label to it:
+
+`kubectl label po kubia-manual creation_method=manual`
+
+Now, let’s also change the **env=prod** label to **env=debug** on the **kubia-manual-v2** pod, to see how existing labels can be changed. You need to use the **--overwrite** option when changing existing labels.
+
+`kubectl label po kubia-manual-v2 env=debug --overwrite`
