@@ -1,6 +1,8 @@
 ## Learning Kubernetes
 
-This is just a simple demonstration to get a basic understanding of how kubernetes works while working step by step. We won't be going into depth about docker :blush: but will see sufficient content to get you basic understanding to learn and work with kuberntes. :v: Hope you enjoy learning. If you like it please give it a :star2:. 
+This is just a simple demonstration to get a basic understanding of how kubernetes works while working step by step. I leant kubernetes like this and made this repo to solve some problems that I faced during my learning experience so that it might help other beginners. We won't be going into depth about docker :blush: but will see sufficient content to get you basic understanding to learn and work with kuberntes. :v: Hope you enjoy learning. If you like it please give it a :star2:. 
+
+**Important :-** By seeing size of readme you might have second thoughts but to be honest if you work from start you won't experience any problem and learn along the way. 
 
 
 ## Contents
@@ -45,6 +47,13 @@ This is just a simple demonstration to get a basic understanding of how kubernet
         - [Introducing labels](#introducing-labels)
             - [Specifying labels when creating a pod](#specifying-labels-when-creating-a-pod)
             - [Modifying labels of existing pods](#modifying-labels-of-existing-pods)
+        - [Listing subsets of pods through label selectors](#listing-subsets-of-pods-through-label-selectors)
+            - [Listing pods using a label selector](#listing-pods-using-a-label-selector)
+            - [Using multiple conditions in a label selector](#using-multiple-conditions-in-a-label-selector)
+        - [Using labels and selectors to constrain pod scheduling](#using-labels-and-selectors-to-constrain-pod-scheduling)   
+            - [Using labels for categorizing worker nodes](#using-labels-for-categorizing-worker-nodes)
+            - [Scheduling pods to specific nodes](#scheduling-pods-to-specific-nodes)
+            - [Scheduling to one specific node](#scheduling-to-one-specific-node)
 
 ## Requirements
 
@@ -464,7 +473,7 @@ In a different terminal, you can now use curl to send an HTTP request to your po
 
 Using port forwarding like this is an effective way to test an individual pod.
 
-#### Introducing labels
+### Introducing labels
 
 Organizing pods and all other Kubernetes objects is done through labels. Labels are a simple, yet incredibly powerful, Kubernetes feature for organizing not only pods, but all other Kubernetes resources. A label is an arbitrary key-value pair you attach to a resource, which is then utilized when selecting resources using label selectors (resources are filtered based on whether they include the label specified in the selector). 
 
@@ -520,3 +529,103 @@ Labels can also be added to and modified on existing pods. Because the **kubia-m
 Now, let’s also change the **env=prod** label to **env=debug** on the **kubia-manual-v2** pod, to see how existing labels can be changed. You need to use the **--overwrite** option when changing existing labels.
 
 `kubectl label po kubia-manual-v2 env=debug --overwrite`
+
+### Listing subsets of pods through label selectors
+
+Attaching labels to resources so you can see the labels next to each resource when listing them isn’t that interesting. But labels go hand in hand with *label selectors*. Label selectors allow you to select a subset of pods tagged with certain labels and perform an operation on those pods.
+
+A label selector can select resources based on whether the resource
+- Contains (or doesn’t contain) a label with a certain key
+- Contains a label with a certain key and value
+- Contains a label with a certain key, but with a value not equal to the one you specify
+
+#### Listing pods using a label selector
+
+Let’s use label selectors on the pods you’ve created so far. To see all pods you created manually (you labeled them with **creation_method=manual**), do the following:
+
+`kubectl get po -l creation_method=manual`
+```bash
+NAME              READY     STATUS    RESTARTS   AGE
+kubia-manual      1/1       Running   0          22h
+kubia-manual-v2   1/1       Running   0          14h
+```
+
+And those that don’t have the **env** label:
+
+`kubectl get po -l '!env'`
+```bash
+NAME           READY     STATUS    RESTARTS   AGE
+kubia-5k788    1/1       Running   1          9d
+kubia-7zxwj    1/1       Running   1          5d
+kubia-bsksp    1/1       Running   1          5d
+kubia-manual   1/1       Running   0          22h
+```
+
+Make sure to use single quotes around **!env**, so the bash shell doesn’t
+evaluate the exclamation mark
+
+#### Using multiple conditions in a label selector
+
+A selector can also include multiple comma-separated criteria. Resources need to match all of them to match the selector. You can execute command given below
+
+`kubectl get po -l '!env , !creation_method' --show-labels`
+
+### Using labels and selectors to constrain pod scheduling
+
+All the pods you’ve created so far have been scheduled pretty much randomly across your worker nodes. Certain cases exist, however, where you’ll want to have at least a little say in where a pod should be scheduled. A good example is when your hardware infrastructure isn’t homogenous. You never want to say specifically what node a pod should be scheduled to, because that would couple the application to the infrastructure, whereas the whole idea of Kubernetes is hiding the actual infrastructure from the apps that run on it.
+
+#### Using labels for categorizing worker nodes
+
+The pods aren't only kubernetes resource type that you can attach label to. Lables can be attached to any Kubernetes resource including nodes.
+
+Let’s imagine one of the nodes in your cluster contains a GPU meant to be used for general-purpose GPU computing. You want to add a label to the node showing this feature. You’re going to add the label **gpu=true** to one of your nodes (pick one out of the list returned by **kubectl get nodes**):
+
+`kubectl label node minikube gpu=true`
+> node/minikube labeled
+
+Now you can use a label selector when listing the nodes, like you did before with pods. List only nodes that include the label *gpu=true*:
+
+`kubectl get node -l gpu=true`
+
+```bash
+NAME       STATUS    ROLES     AGE       VERSION
+minikube   Ready     master    9d        v1.10.0
+```
+
+As expected, only one node has this label. You can also try listing all the nodes and tell kubectl to display an additional column showing the values of each node’s gpu label.
+
+`kubectl get nodes -L gpu`
+```bash
+NAME       STATUS    ROLES     AGE       VERSION   GPU
+minikube   Ready     master    9d        v1.10.0   true
+```
+
+#### Scheduling pods to specific nodes
+
+Now imagine you want to deploy a new pod that needs a GPU to perform its work. To ask the scheduler to only choose among the nodes that provide a GPU, you’ll add a node selector to the pod’s YAML. Create a file called **kubia-gpu.yaml** with the following listing’s contents and then use **kubectl create -f kubia-gpu.yaml** to create the pod. The contents of file are
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: kubia-gpu
+spec:
+  nodeSelector:
+    gpu: "true"
+  containers:
+  - image: luksa/kubia
+    name: kubia
+```
+
+You’ve added a **nodeSelector** field under the spec section. When you create the pod, the scheduler will only choose among the nodes that contain the *gpu=true* label (which is only a single node in your case).
+
+#### Scheduling to one specific node
+
+Similarly, you could also schedule a pod to an exact node, because each node also has a unique label with the key **kubernetes.io/hostname** and value set to the actual hostname of the node. Example shown below
+
+`kubectl get nodes --show-labels`
+```bash
+NAME       STATUS    ROLES     AGE       VERSION   LABELS
+minikube   Ready     master    9d        v1.10.0   beta.kubernetes.io/arch=amd64,beta.kubernetes.io/os=linux,gpu=true,kubernetes.io/hostname=minikube,node-role.kubernetes.io/master=
+```
+But setting the *nodeSelector* to a specific node by the hostname label may lead to the pod being unschedulable if the node is offline.
