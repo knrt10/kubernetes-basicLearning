@@ -251,7 +251,7 @@ it completes.
 
 #### Checking to see if the cluster is up and kubernetes can talk to it
 
-To interact with Kubernetes, you also need the **kubectl** CLI client. Again, all you need to do is download it and put it on your path. 
+To interact with Kubernetes, you also need the **kubectl** CLI client. [Installing](https://kubernetes.io/docs/tasks/tools/install-kubectl/) it is easy.
 
 To verify your cluster is working, you can use the **kubectl cluster-info** command shown in the following listing.
 
