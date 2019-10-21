@@ -1,6 +1,8 @@
-## Learning Kubernetes
+<p align="center">
+  <img src="https://user-images.githubusercontent.com/24803604/67205502-87c43800-f42d-11e9-9941-2a27d5dea0fe.png" />
+</p>
 
-This is just a simple demonstration to get a basic understanding of how kubernetes works while working step by step. I leant kubernetes like this and made this repo to solve some problems that I faced during my learning experience so that it might help other beginners. We won't be going into depth about docker :blush: but will see sufficient content to get you basic understanding to learn and work with kuberntes. :v: Hope you enjoy learning. If you like it please give it a :star2:. 
+This is just a simple demonstration to get a basic understanding of how kubernetes works while working step by step. I learnt kubernetes like this and made this repo to solve some problems that I faced during my learning experience so that it might help other beginners. We won't be going into depth about docker :blush: but will see sufficient content to get you basic understanding to learn and work with kuberntes. :v: Hope you enjoy learning. If you like it please give it a :star2:. 
 
 **Important :-** By seeing size of readme you might have second thoughts but to be honest if you work from start you won't experience any problem and learn along the way. 
 
@@ -54,6 +56,8 @@ This is just a simple demonstration to get a basic understanding of how kubernet
             - [Using labels for categorizing worker nodes](#using-labels-for-categorizing-worker-nodes)
             - [Scheduling pods to specific nodes](#scheduling-pods-to-specific-nodes)
             - [Scheduling to one specific node](#scheduling-to-one-specific-node)
+
+4. [Todo](#todo)
 
 ## Requirements
 
@@ -629,3 +633,16 @@ NAME       STATUS    ROLES     AGE       VERSION   LABELS
 minikube   Ready     master    9d        v1.10.0   beta.kubernetes.io/arch=amd64,beta.kubernetes.io/os=linux,gpu=true,kubernetes.io/hostname=minikube,node-role.kubernetes.io/master=
 ```
 But setting the *nodeSelector* to a specific node by the hostname label may lead to the pod being unschedulable if the node is offline.
+
+
+## Todo
+
+- [ ] Write more about pods
+- [ ] Write about yaml files
+- [ ] Write about ingress routing
+- [ ] Write about volumes
+- [ ] Write about config maps and secrets
+- [ ] Write more on updating running pods
+- [ ] Write about StatefulSets
+- [ ] More on securing pods and containers
+- [ ] Implement && write about GCP 
