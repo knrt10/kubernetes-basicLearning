@@ -4,7 +4,8 @@
   "description": "Understand kubernetes step by step.",
   "main": "app.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+		"start": "node app.js"
   },
   "repository": {
     "type": "git",
