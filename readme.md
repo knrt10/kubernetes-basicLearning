@@ -469,7 +469,7 @@ Note that you can only retrieve container logs of pods that are still in existen
 
 When you want to talk to a specific pod without going through a service (for debugging or other reasons), Kubernetes allows you to configure port forwarding to the pod. This is done through the **kubectl port-forward** command. The following command will forward your machine’s local port **8888** to port **8080** of your **kubia-manual** pod:
 
-`port-forward kubia-manual 8888:8080
+`kubectl port-forward kubia-manual 8888:8080
 
 In a different terminal, you can now use curl to send an HTTP request to your pod through the kubectl port-forward proxy running on localhost:8888:
 
