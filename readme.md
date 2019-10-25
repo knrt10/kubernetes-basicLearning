@@ -581,7 +581,7 @@ All the pods you’ve created so far have been scheduled pretty much randomly ac
 
 #### Using labels for categorizing worker nodes
 
-The pods aren't only kubernetes resource type that you can attach label to. Lables can be attached to any Kubernetes resource including nodes.
+The pods aren't only kubernetes resource type that you can attach label to. Labels can be attached to any Kubernetes resource including nodes.
 
 Let’s imagine one of the nodes in your cluster contains a GPU meant to be used for general-purpose GPU computing. You want to add a label to the node showing this feature. You’re going to add the label **gpu=true** to one of your nodes (pick one out of the list returned by **kubectl get nodes**):
 
