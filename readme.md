@@ -24,6 +24,10 @@ This is just a simple demonstration to get a basic understanding of how kubernet
    - [Pushing the image to an image registry](#pushing-the-image-to-an-image-registry)
       - [Pushing image to docker hub](#pushing-image-to-docker-hub)
 3. **Kubernetes**
+    - [What is Kubernetes](#what-is-kubernetes)
+        - [Splitting apps into microservice](#splitting-apps-into-microservice)
+        - [Scaling Microservices](#scaling-microservices)
+        - [Deploying Microservices](#deploying-microservices)
     - [Working with Kubernetes](#working-with-kubernetes)   
     - [Setting up a Kubernetes cluster](#setting-up-a-kubernetes-cluster)
     - [Running a local single node Kubernetes cluster with Minikube](#running-a-local-single-node-kubernetes-cluster-with-minikube)   
@@ -57,6 +61,7 @@ This is just a simple demonstration to get a basic understanding of how kubernet
             - [Scheduling pods to specific nodes](#scheduling-pods-to-specific-nodes)
             - [Scheduling to one specific node](#scheduling-to-one-specific-node)
         - [Annotating pods](#Annotating-pods)
+            - [Looking up an objects annotations](#looking-up-an-objects-annotations)
 
 4. [Todo](#todo)
 
@@ -226,7 +231,48 @@ Before you can push the image to Docker Hub, you need to log in under your user 
 
 `docker push knrt10/kubia`
 
-## Working with Kubernetes
+### What is Kubernetes
+
+Years ago, most software applications were big monoliths, running either as a single process or as a small number of processes spread across a handful of servers. Today, these big monolithic legacy applications are slowly being broken down into smaller, independently running components called microservices. Because microservices are decoupled from each other, they can be developed, deployed, updated, and scaled individually. This enables you to change components quickly and as often as necessary to keep up with today’s rapidly changing business requirements.
+
+But with bigger numbers of deployable components and increasingly larger datacenters, it becomes increasingly difficult to configure manage, and keep the whole system running smoothly. It’s much harder to figure out where to put each of those components to achieve high resource utilization and thereby keep the hardware costs down. Doing all this manually is hard work. We need automation, which includes automatic scheduling of those components to our servers, automatic configuration, supervision, and failure-handling. This is where **Kubernetes** comes in.
+
+Kubernetes enables developers to deploy their applications themselves and as often as they want, without requiring any assistance from the operations (ops) team. But Kubernetes doesn’t benefit only developers. It also helps the ops team by automatically monitoring and rescheduling those apps in the event of a hardware failure. The focus for system administrators (sysadmins) shifts from supervising individual apps to mostly supervising and managing Kubernetes and the rest of the infrastructure, while Kubernetes itself takes care of the apps.
+
+#### Splitting apps into microservice
+
+Each microservice runs as an independent process and communicates with other microservices through simple, well-defined interfaces (APIs). Refer to below image
+
+![Microservice](https://user-images.githubusercontent.com/24803604/68068406-bf4bb200-fd54-11e9-8565-6214d30616bb.png)
+
+> Image taken from other source
+
+
+Microservices communicate through synchronous protocols such as HTTP, over which they usually expose RESTful (REpresentational State Transfer) APIs, or through asynchronous protocols such as AMQP (Advanced Message Queueing Protocol). These protocols are simple, well understood by most developers, and not tied to any specific programming language. Each microservice can be written in the language that’s most appropriate for implementing that specific microservice.
+
+Because each microservice is a standalone process with a relatively static external API, it’s possible to develop and deploy each microservice separately. A change to one of them doesn’t require changes or redeployment of any other service, provided that the API doesn’t change or changes only in a backward-compatible way.
+
+#### Scaling Microservices
+
+Scaling microservices, unlike monolithic systems, where you need to scale the system as a whole, is done on a per-service basis, which means you have the option of scaling only those services that require more resources, while leaving others at their original scale. Refer to image below
+
+![Scaling](https://user-images.githubusercontent.com/24803604/68068433-03d74d80-fd55-11e9-87fe-5fad885168d1.png)
+
+> Image taken from other source
+
+When a monolithic application can’t be scaled out because one of its parts is unscalable, splitting the app into microservices allows you to horizontally scale the parts that allow scaling out, and scale the parts that don’t, vertically instead of horizontally.
+
+#### Deploying Microservices
+
+As always, microservices also have drawbacks. When your system consists of only a small number of deployable components, managing those components is easy. It’s trivial to decide where to deploy each component, because there aren’t that many choices. When the number of those components increases, deployment-related decisions become increasingly difficult because not only does the number of deployment combinations increase, but the number of inter-dependencies between the components increases by an even greater factor.
+
+Microservices also bring other problems, such as making it hard to debug and trace execution calls, because they span multiple processes and machines. Luckily, these problems are now being addressed with distributed tracing systems such as Zipkin.
+
+![Drawback](https://user-images.githubusercontent.com/24803604/68068466-62043080-fd55-11e9-867f-971dc4df862f.png)
+
+> Multiple applications running on the same host may have conflicting dependencies.
+
+#### Working with Kubernetes
 
 Now that you have your app packaged inside a container image and made available through Docker Hub, you can deploy it in a Kubernetes cluster instead of running it in Docker directly. But first, you need to set up the cluster itself.
 
@@ -234,7 +280,7 @@ Now that you have your app packaged inside a container image and made available 
 
 Setting up a full-fledged, multi-node Kubernetes cluster isn’t a simple task, especially if you’re not well-versed in Linux and networking administration. A proper Kubernetes install spans multiple physical or virtual machines and requires the networking to be set up properly so that all the containers running inside the Kubernetes cluster can connect to each other through the same flat networking space.
 
-### Running a local single node Kubernetes cluster with Minikube
+#### Running a local single node Kubernetes cluster with Minikube
 
 The simplest and quickest path to a fully functioning Kubernetes cluster is by using Minikube. Minikube is a tool that sets up a single-node cluster that’s great for both testing Kubernetes and developing apps locally.
 
@@ -638,15 +684,22 @@ But setting the *nodeSelector* to a specific node by the hostname label may lead
 
 ### Annotating pods
 
-In addition to other labels, pods and other objects can also contain annotations. They are also key value pairs, so in essence they are similar to labels, but aren't meant to hold identifying information. They can't be used to group objects the way label can.
+In addition to other labels, pods and other objects can also contain annotations. They are also key value pairs, so in essence they are similar to labels, but aren't meant to hold identifying information. They can't be used to group objects the way label can. While objects can be selected through label selectors, there’s no such thing as an annotation selector. On the other hand, annotations can hold much larger pieces of information and are primarily meant to be used by tools. Certain annotations are automatically added to objects by Kubernetes, but others are added by users manually.
 
-Example
+A great use to annotating pods is to add desciption to each pod or other API object so that everyone using the cluster can quickly look up information about each individual object. 
 
-`kubeclt get pod -a`
+#### Looking up an objects annotations
+
+Let’s see an example of an annotation that Kubernetes added automatically to the pod you created in the previous section. To see the annotations, you’ll need to request the full YAML of the pod or use the `kubectl describe` command. You’ll use the first option in the following listing.
+
+`kubectl get po kubia-zxzij -o yaml`
+```bash
+
+```
 
 ## Todo
 
-- [x] ~~Write more about pods~~
+- [ ] Write more about pods
 - [ ] Write about yaml files
 - [ ] Write about ingress routing
 - [ ] Write about volumes
