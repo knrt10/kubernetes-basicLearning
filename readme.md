@@ -64,6 +64,10 @@ This is just a simple demonstration to get a basic understanding of how kubernet
             - [Looking up an objects annotations](#looking-up-an-objects-annotations)
             - [Adding and modifying annotations](#adding-and-modifying-annotations)
         - [Using namespace to group resources](#using-namespace-to-group-resources)
+            - [Discovering other namespaces and their pods](#discovering-other-namespaces-and-their-pods)
+            - [Creating a namespace](#creating-a-namespace)
+            - [Managing objects in other namespaces](#managing-objects-in-other-namespaces)
+            - [Understanding the isolation provided by namespaces](#understanding-the-isolation-provided-by-namespaces)
 
 4. [Todo](#todo)
 
@@ -725,7 +729,76 @@ You added the annotation `knrt10.github.io/someannotation` with the value `messi
 
 ### Using namespace to group resources
 
-Previously we saw how labels organize pods and objects into groups.
+Previously we saw how labels organize pods and objects into groups. Because each object can have multiple labels, those groups of objects can overlap. Plus, when working with the cluster (through kubectl for example), if you don’t explicitly specify a label selector, you’ll always see all objects.
+
+#### Discovering other namespaces and their pods
+
+Let us first list all the namespaces in our cluster, type the following command
+
+`kubectl get ns`
+```bash
+NAME          STATUS    AGE
+default       Active    9h
+kube-public   Active    9h
+kube-system   Active    9h
+```
+
+Up to this point, you’ve operated only in the `default` namespace. When listing resources with the `kubectl get` command, you’ve never specified the namespace explicitly, so kubectl always defaulted to the default namespace, showing you only the objects in that namespace. But as you can see from the list, the kube-public and the kube-system namespaces also exist. Let’s look at the pods that belong to the `kube-system` namespace, by telling kubectl to list pods in that namespace only:
+
+`kubectl get po -n kube-system`
+```bash
+NAME                                    READY     STATUS    RESTARTS   AGE
+etcd-minikube                           1/1       Running   0          4h
+kube-addon-manager-minikube             1/1       Running   1          9h
+kube-apiserver-minikube                 1/1       Running   0          4h
+kube-controller-manager-minikube        1/1       Running   0          4h
+kube-dns-86f4d74b45-w8mqv               3/3       Running   4          9h
+kube-proxy-25t92                        1/1       Running   0          4h
+kube-scheduler-minikube                 1/1       Running   0          4h
+kubernetes-dashboard-5498ccf677-2zcw5   1/1       Running   2          9h
+storage-provisioner                     1/1       Running   2          9h
+```
+
+I will explain about these pods later (don’t worry if the pods shown here
+don’t match the ones on your system exactly). It’s clear from the name of the namespace that these are resources related to the Kubernetes system itself. By having them in this separate namespace, it keeps everything nicely organized. If they were all in the default namespace, mixed in with the resources you create yourself, you’d have a hard time seeing what belongs where, and you might inadvertently delete system resources.
+
+Namespaces enable you to separate resources that don’t belong together into nonoverlapping groups. If several users or groups of users are using the same Kubernetes cluster, and they each manage their own distinct set of resources, they should each use their own namespace. This way, they don’t need to take any special care not to inadvertently modify or delete the other users’ resources and don’t need to concern themselves with name conflicts, because namespaces provide a scope for resource names, as has already been mentioned.
+
+### Creating a namespace
+
+A namespace is a Kubernetes resource like any other, so you can create it by posting a
+YAML file to the Kubernetes API server. Let’s see how to do this now. 
+
+You’re going to create a file called **custom-namespace.yml** (you can create it in any directory you want), or copy from this repo, where you’ll find the file with filename [custom-namespace.yml](https://github.com/knrt10/kubernetes-basicLearning/blob/master/custom-namespace.yml). The following listing shows the entire contents of the file.
+
+```yml
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: custom-namespace
+```
+
+Now type the following command
+
+`kubectl create -f custom-namespace.yaml`
+> namespace/custom-namespace created
+
+#### Managing objects in other namespaces
+
+To create resources in the namespace you’ve created, either add a `namespace: customnamespace` entry to the metadata section, or specify the namespace when creating the resource with the `kubectl create` command:
+
+`kubectl create -f kubia-manual.yaml -n custom-namespace`
+> pod/kubia-manual created
+
+You now have two pods with the same name (kubia-manual). One is in the `default`
+namespace, and the other is in your `custom-namespace`.
+
+When listing, describing, modifying, or deleting objects in other namespaces, you
+need to pass the `--namespace (or -n)` flag to kubectl. If you don’t specify the namespace, kubectl performs the action in the default namespace configured in the current kubectl context. The current context’s namespace and the current context itself can be changed through `kubectl config` commands.
+
+#### Understanding the isolation provided by namespaces
+
+To wrap up this section about namespaces, let me explain what namespaces don’t provide at least not out of the box. Although namespaces allow you to isolate objects into distinct groups, which allows you to operate only on those belonging to the specified namespace, they don’t provide any kind of isolation of running objects. For example, you may think that when different users deploy pods across different namespaces, those pods are isolated from each other and can’t communicate but that’s not necessarily the case. Whether namespaces provide network isolation depends on which networking solution is deployed with Kubernetes. When the solution doesn’t provide inter-namespace network isolation, if a pod in namespace foo knows the IP address of a pod in namespace bar, there is nothing preventing it from sending traffic, such as HTTP requests, to the other pod.
 
 ## Todo
 
