@@ -62,6 +62,8 @@ This is just a simple demonstration to get a basic understanding of how kubernet
             - [Scheduling to one specific node](#scheduling-to-one-specific-node)
         - [Annotating pods](#Annotating-pods)
             - [Looking up an objects annotations](#looking-up-an-objects-annotations)
+            - [Adding and modifying annotations](#adding-and-modifying-annotations)
+        - [Using namespace to group resources](#using-namespace-to-group-resources)
 
 4. [Todo](#todo)
 
@@ -280,7 +282,7 @@ Now that you have your app packaged inside a container image and made available 
 
 Setting up a full-fledged, multi-node Kubernetes cluster isn’t a simple task, especially if you’re not well-versed in Linux and networking administration. A proper Kubernetes install spans multiple physical or virtual machines and requires the networking to be set up properly so that all the containers running inside the Kubernetes cluster can connect to each other through the same flat networking space.
 
-#### Running a local single node Kubernetes cluster with Minikube
+### Running a local single node Kubernetes cluster with Minikube
 
 The simplest and quickest path to a fully functioning Kubernetes cluster is by using Minikube. Minikube is a tool that sets up a single-node cluster that’s great for both testing Kubernetes and developing apps locally.
 
@@ -692,10 +694,38 @@ A great use to annotating pods is to add desciption to each pod or other API obj
 
 Let’s see an example of an annotation that Kubernetes added automatically to the pod you created in the previous section. To see the annotations, you’ll need to request the full YAML of the pod or use the `kubectl describe` command. You’ll use the first option in the following listing.
 
-`kubectl get po kubia-zxzij -o yaml`
+`kubectl get po kubia-zb95q -o yaml`
 ```bash
-
+apiVersion: v1
+kind: Pod
+metadata:
+  annotations:
+    kubernetes.io/created-by: |
+      {"kind":"SerializedReference", "apiVersion":"v1",
+      "reference":{"kind":"ReplicationController", "namespace":"default", ...
 ```
+
+Without going into too many details, as you can see, the `kubernetes.io/created-by`
+annotation holds JSON data about the object that created the pod. That’s not something
+you’d want to put into a label. Labels should be **short**, whereas annotations can
+contain relatively large blobs of data **(up to 256 KB in total)**.
+
+**Important**:- The kubernetes.io/created-by annotations was deprecated in version
+`1.8` and will be removed in `1.9`, so you will no longer see it in the YAML.
+
+#### Adding and modifying annotations
+
+Annotations can obviously be added to pods at creation time, the same way label can. But we can also add it after using the following command. Let's try adding this to `kubia-manual` pod now.
+
+`kubectl annotate pod kubia-manual knrt10.github.io/someannotation="messi ronaldo"`
+
+You added the annotation `knrt10.github.io/someannotation` with the value `messi ronaldo`. It’s a good idea to use this format for annotation keys to prevent key collisions. When different tools or libraries add annotations to objects, they may accidentally override each other’s annotations if they don’t use unique prefixes like you did here. You can check your pod now using following command
+
+`kubectl describe po kubia-manual`
+
+### Using namespace to group resources
+
+Previously we saw how labels organize pods and objects into groups.
 
 ## Todo
 
