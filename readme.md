@@ -68,6 +68,12 @@ This is just a simple demonstration to get a basic understanding of how kubernet
             - [Creating a namespace](#creating-a-namespace)
             - [Managing objects in other namespaces](#managing-objects-in-other-namespaces)
             - [Understanding the isolation provided by namespaces](#understanding-the-isolation-provided-by-namespaces)
+        - [Stopping and removing pods](#stopping-and-removing-pods)
+            - [Deleting a pod by name](#deleting-a-pod-by-name)
+            - [Deleting pods using label selectors](#deleting-pods-using-label-selectors)
+            - [Deleting pods by deleting the whole namespace](#deleting-pods-by-deleting-the-whole-namespace)
+            - [Deleting all pods in namespace, while keeping the namespace](#deleting-all-pods-in-namespace-while-keeping-the-namespace)
+            - [Delete almost all resources in namespace](#delete-almost-all-resources-in-namespace)
 
 4. [Todo](#todo)
 
@@ -799,6 +805,90 @@ need to pass the `--namespace (or -n)` flag to kubectl. If you don’t specify t
 #### Understanding the isolation provided by namespaces
 
 To wrap up this section about namespaces, let me explain what namespaces don’t provide at least not out of the box. Although namespaces allow you to isolate objects into distinct groups, which allows you to operate only on those belonging to the specified namespace, they don’t provide any kind of isolation of running objects. For example, you may think that when different users deploy pods across different namespaces, those pods are isolated from each other and can’t communicate but that’s not necessarily the case. Whether namespaces provide network isolation depends on which networking solution is deployed with Kubernetes. When the solution doesn’t provide inter-namespace network isolation, if a pod in namespace foo knows the IP address of a pod in namespace bar, there is nothing preventing it from sending traffic, such as HTTP requests, to the other pod.
+
+### Stopping and removing pods
+
+We have created a number of pods which should all be running. If you have followed from the start, you should have 5 pods in `default` namespace and one in `custom-namespace`. We are going to stop them all now, because we don't need them anymore.
+
+#### Deleting a pod by name
+
+Let's first delele `kubia-gpu` pod name
+
+`kubectl delete po kubia-gpu`
+
+#### Deleting pods using label selectors
+
+Instead of specifying each pod to delete by name, you’ll now use what you’ve learned
+about label selectors to stop both the `kubia-manual` and the `kubia-manual-v2` pod.
+Both pods include the `creation_method=manual` label, so you can delete them by
+using a label selector:
+
+`kubectl delete po -l creation_method=manual`
+> pod "kubia-manual" deleted
+> pod "kubia-manual-v2" deleted
+
+In the earlier microservices example, where you had tens (or possibly hundreds) of
+pods, you could, for instance, delete all canary pods at once by specifying the
+`rel=canary` label selector
+
+`kubectl delete po -l rel=canary`
+
+#### Deleting pods by deleting the whole namespace
+
+Okay, back to your real pods. What about the pod in the `custom-namespace`? We no
+longer need either the pods in that namespace, or the namespace itself. You can delete the whole namespace using the following command. Your all pods inside that workspace will be automatically deleted.
+
+`kubectl delete ns custom-namespace`
+> namespace "custom-namespace" deleted
+
+#### Deleting all pods in namespace, while keeping the namespace
+
+Suppose you want to keep your namespace but delete all the pods in it, so this is the approach to follow. We now have cleaned almost everything but we have some pods running if you ran the `kubectl run` command before.
+
+This time, instead of deleting the specific pod, tell Kubernetes to delete all pods in the current namespace by using the --all option
+
+`kubeclt delete po --all`
+```bash
+pod "kubia-pjxrs" deleted
+pod "kubia-xvfxp" deleted
+pod "kubia-zb95q" deleted
+```
+
+Now, double check that no pods were left running:
+
+`kubectl get po`
+```bash
+kubia-5gknm   1/1       Running   0          48s
+kubia-h62k7   1/1       Running   0          48s
+kubia-x4nsb   1/1       Running   0          48s
+```
+
+Wait, what!?! All pods are terminating, but a new pod which weren't there before, has appeared. No matter how many times you delete all pods, a new pod called kubia-something will emerge.
+
+You may remember you created your first pod with the `kubectl run` command. I mentioned that this doesn’t create a pod directly, but instead creates a `ReplicationController`, which then creates the pod. As soon as you delete a pod created by the ReplicationController, it immediately creates a new one. To delete the pod, you also need to **delete the ReplicationController**.
+
+#### Delete almost all resources in namespace
+
+You can delete the ReplicationController and the pods, as well as all the Services
+you’ve created, by deleting all resources in the current namespace with a single
+command:
+
+`kubectl delete all --all`
+```bash
+pod "kubia-5gknm" deleted
+pod "kubia-h62k7" deleted
+pod "kubia-x4nsb" deleted
+replicationcontroller "kubia" deleted
+service "kubernetes" deleted
+service "kubia-http" deleted
+```
+
+The first all in the command specifies that you’re deleting resources of all types, and the --all option specifies that you’re deleting all resource instances instead of specifying them by name (you already used this option when you ran the previous delete command).
+
+As it deletes resources, kubectl will print the name of every resource it deletes. In the list, you should see the kubia ReplicationController and the `kubia-http` Service you created before.
+
+**Note**:- The kubectl delete all --all command also deletes the kubernetes
+Service, but it should be recreated automatically in a few moments.
 
 ## Todo
 
