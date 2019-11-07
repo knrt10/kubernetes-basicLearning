@@ -74,6 +74,10 @@ This is just a simple demonstration to get a basic understanding of how kubernet
             - [Deleting pods by deleting the whole namespace](#deleting-pods-by-deleting-the-whole-namespace)
             - [Deleting all pods in namespace, while keeping the namespace](#deleting-all-pods-in-namespace-while-keeping-the-namespace)
             - [Delete almost all resources in namespace](#delete-almost-all-resources-in-namespace)
+        - [Replication and other controllers: Deploying managed pods](#replication-and-other-controllers-deploying-managed-pods)
+            - [Keeping pods healthy](#keeping-pods-healthy)
+            - [Introducing liveness probes](#introducing-liveness-probes)
+            - [Creating an HTTP based liveness probe](#creating-an-http-based-liveness-probe)
 
 4. [Todo](#todo)
 
@@ -889,6 +893,42 @@ As it deletes resources, kubectl will print the name of every resource it delete
 
 **Note**:- The kubectl delete all --all command also deletes the kubernetes
 Service, but it should be recreated automatically in a few moments.
+
+### Replication and other controllers: Deploying managed pods 
+
+As far now, you might have understood that pods represent the basic deployment unit in Kubernetes. We know how to create, supervise and manage them manually. But in real-world use cases, you want your deployments to stay up and running automatically and remain healthy without any manual intervention. To do this, we `never almost create pods directly`. Instead we create other type of resources like **ReplicationControllers** or **Deployments** which then create and manage the actual pods.
+
+When you create unmanaged pods (such as the ones we created previously), a cluster node is selected to run the pod and then its containers are run on that node. Now, we'll learn that Kubernetes then monitors those containers and automatically restarts them if they fail. But if the whole node fails, the pods on the node are lost and will not be replaced with new ones, unless those pods are managed by the previously mentioned ReplicationControllers or similar. 
+
+We'll now learn how Kubernetes checks if a container is still alive and restarts it if it isn’t. We’ll also learn how to run managed pods—both those that run indefinitely and those that perform a single task and then stop.
+
+#### Keeping pods healthy
+
+One of the main benefits of using Kubernetes is the ability to give it a list of containers and let it keep those containers running somewhere in the cluster. You do this by creating a Pod resource and letting Kubernetes pick a worker node for it and run the pod’s containers on that node. But what if one of those containers dies?What if all containers of a pod die?
+
+As soon as a pod is scheduled to a node, the Kubelet on that node will run its containers and, from then on, keep them running as long as the pod exists. If the container’s main process crashes, the Kubelet will restart the container. If your application has a bug that causes it to crash every once in a while, Kubernetes will restart it automatically, so even without doing anything special in the app itself, running the app in Kubernetes automatically gives it the ability to heal itself.
+
+But sometimes apps stop working without their process crashing. For example, a Java app with a memory leak will start throwing `OutOfMemoryErrors`, but the JVM process will keep running. It would be great to have a way for an app to signal to Kubernetes that it’s no longer functioning properly and have Kubernetes restart it.
+
+We’ve said that a container that crashes is restarted automatically, so maybe you’re thinking you could catch these types of errors in the app and exit the process when they occur. You can certainly do that, but it still doesn’t solve all your problems.
+
+For example, what about those situations when your app stops responding because it falls into an infinite loop or a deadlock? To make sure applications are restarted in such cases, you must check an application’s health from the outside and not depend on the app doing it internally.
+
+#### Introducing liveness probes
+
+Kubernetes can check if a container is still alive through `liveness probes`. You can specify a liveness probe for each container in the pod's specification. Kubernetes can probe the container using one of three mechanisms:
+
+- An `HTTP GET` probe performs an HTTP GET request on the container's IP address, a port and path you specify. If the probe recieves a response and the response code doesn’t represent an error **(in other words, if the HTTP response code is 2xx or 3xx)**, the probe is considered successful. If the server returns an error response code or if it doesn’t respond at all, the probe is considered a failure and the container will be restarted as a result.
+
+- A `TCP Socket` probe tries to open a TCP connection to the specified port of the container. If the connection is established successfully, the probe is successful. Otherwise, the container is restarted.
+
+- An `Exec` probe executes an arbitrary command inside the container and checks the command’s exit status code. If the status code is 0, the probe is successful. All other probes are consideres as failure.
+
+#### Creating an HTTP based liveness probe
+
+Let's see how we can add our liveness probe to our application.
+
+`kubectl get po -o wide`
 
 ## Todo
 
