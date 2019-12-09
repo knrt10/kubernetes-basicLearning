@@ -1,0 +1,20 @@
+{
+  "name": "kubernetes-basiclearning",
+  "version": "1.0.0",
+  "description": "Understand kubernetes step by step.",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+		"start": "node app.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/knrt10/kubernetes-basicLearning.git"
+  },
+  "author": "knrt10",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/knrt10/kubernetes-basicLearning/issues"
+  },
+  "homepage": "https://github.com/knrt10/kubernetes-basicLearning#readme"
+}
