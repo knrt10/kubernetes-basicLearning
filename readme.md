@@ -78,7 +78,8 @@ This is just a simple demonstration to get a basic understanding of how kubernet
             - [Introducing liveness probes](#introducing-liveness-probes)
             - [Creating an HTTP based liveness probe](#creating-an-http-based-liveness-probe)
             - [Seeing a liveness probe in action](#seeing-a-liveness-probe-in-action)
-            
+            - [Configuring additional properties of liveness probe](#configuring-additional-properties-of-liveness-probe)
+            - [Creating effective liveness probe](#creating-effective-liveness-probe)
 
 4. [Todo](#todo)
 
@@ -964,6 +965,62 @@ To see what a liveness probe does, try creating a pod now. After about a minute 
 NAME READY STATUS RESTARTS AGE
 kubia-liveness 1/1 Running 1 2m
 ```
+
+The `RESTARTS` column shows that the pod’s container has been restarted once (if you
+wait another minute and a half, it gets restarted again, and then the cycle continues
+indefinitely).
+
+You can see why the container had to be restarted by looking at what `kubectl describe` prints out. You can see that the container is currently running, but it previously terminated because of an error. The `exit code` was **137**, which has a special meaning. It denotes that the process was terminated by an external signal. The number 137 is a sum of two numbers: `128+x`, where x is the signal number sent to the process that caused it to terminate.
+
+In the example, `x equals 9`, which is the number of the `SIGKILL` signal, meaning the process was killed forcibly. When a container a killed, a completely new container is created it's not the same container being restarted again.
+
+#### Configuring additional properties of liveness probe
+
+You may have noticed that `kubectl describe` also displays additional information
+about the liveness probe:
+
+```yml
+Liveness: http-get http://:8080/ delay=0s timeout=1s period=10s #success=1
+➥ #failure=3
+```
+
+Beside the liveness probe options you specified explicitly, you can also see additional properties, such as `delay, timeout, period`, and so on. The delay=0s part shows that  the probing begins immediately after the container is started. The timeout is set to only 1 second, so the container must return a response in 1 second or the probe is counted as failed. The container is probed every 10 seconds (period=10s) and the container is restarted after the probe fails three consecutive times (#failure=3).
+
+If you don’t set the initial delay, the prober will start probing the container as soon as it starts, which usually leads to the probe failing, because the app isn’t ready to start receiving requests. If the number of failures exceeds the failure threshold, the container is restarted before it’s even able to start responding to requests properly.
+
+**TIP**:- Always remember to set an initial delay to account for your app’s startup time.
+
+I’ve seen this on many occasions and users were confused why their container was being restarted. But if they’d used `kubectl describe`, they’d have seen that the container terminated with exit code 137 or 143, telling them that the pod was terminated externally. Additionally, the listing of the pod’s events would show that the container was killed because of a failed liveness probe. If you see this happening at pod startup, it’s because you failed to set `initialDelaySeconds` appropriately.
+
+#### Creating effective liveness probe
+
+**For pods running in production**, you should always define a liveness probe. Without one, Kubernetes has no way of knowing whether your app is still alive or not. As long as the process is still running, Kubernetes will consider the container to be healthy.
+
+##### WHAT A LIVENESS PROBE SHOULD CHECK
+
+Your simplistic liveness probe simply checks if the server is responding. While this may seem overly simple, even a liveness probe like this does wonders, because it causes the container to be restarted if the web server running within the container stops responding to HTTP requests. Compared to having no liveness probe, this is a major improvement, and may be sufficient in most cases.
+
+But for a better liveness check, you’d configure the probe to perform requests on a specific URL path `(/health, for example)` and have the app perform an internal status check of all the vital components running inside the app to ensure none of them has died or is unresponsive.
+
+**TIP**:- Make sure the /health HTTP endpoint doesn’t require authentication; otherwise the probe will always fail, causing your container to be restarted indefinitely.
+
+Be sure to check only the internals of the app and nothing influenced by an external factor. For example, a frontend web server’s liveness probe shouldn’t return a failure when the server can’t connect to the backend database. If the underlying cause is in the database itself, restarting the web server container will not fix the problem. Because the liveness probe will fail again, you’ll end up with the container restarting repeatedly until the database becomes accessible again.
+
+##### KEEPING PROBES LIGHT
+
+Liveness probes shouldn’t use too many computational resources and shouldn’t take too long to complete. By default, the probes are executed relatively often and are only allowed one second to complete. Having a probe that does heavy lifting can slow down your container considerably. Later in the book, you’ll also learn about how to limit CPU time available to a container. The probe’s CPU time is counted in the container’s CPU time quota, so having a heavyweight liveness probe will reduce the CPU time available to the main application processes.
+
+##### DON’T BOTHER IMPLEMENTING RETRY LOOPS IN YOUR PROBES
+
+You’ve already seen that the failure threshold for the probe is configurable and usually the probe must fail multiple times before the container is killed. But even if you set the failure threshold to 1, Kubernetes will retry the probe several times before considering it a single failed attempt. Therefore, implementing your own retry loop into the probe is wasted effort.
+
+##### LIVENESS PROBE WRAP-UP
+
+You now understand that Kubernetes keeps your containers running by restarting them if they crash or if their liveness probes fail. This job is performed by the Kubelet on the node hosting the pod the Kubernetes Control Plane components running on the master(s) have no part in this process.
+
+But if the node itself crashes, it’s the Control Plane that must create replacements for all the pods that went down with the node. It doesn’t do that for pods that you create directly. Those pods aren’t managed by anything except by the Kubelet, but because the Kubelet runs on the node itself, it can’t do anything if the node fails.
+
+To make sure your app is restarted on another node, you need to have the pod managed by a ReplicationController or similar mechanism later on in this readme.
 
 ## Todo
 
