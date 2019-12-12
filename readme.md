@@ -80,6 +80,10 @@ This is just a simple demonstration to get a basic understanding of how kubernet
             - [Seeing a liveness probe in action](#seeing-a-liveness-probe-in-action)
             - [Configuring additional properties of liveness probe](#configuring-additional-properties-of-liveness-probe)
             - [Creating effective liveness probe](#creating-effective-liveness-probe)
+        - [Introducing ReplicationControllers](#introducing-replicationcontrollers)
+            - [The operation of a ReplicationController](#the-operation-of-a-replicationcontroller)
+            - [Introducing the controller reconciliation loop](#introducing-the-controller-reconciliation-loop)
+            - [Creating a ReplicationController](#creating-a-replicationcontroller)
 
 4. [Todo](#todo)
 
@@ -1021,6 +1025,97 @@ You now understand that Kubernetes keeps your containers running by restarting t
 But if the node itself crashes, it’s the Control Plane that must create replacements for all the pods that went down with the node. It doesn’t do that for pods that you create directly. Those pods aren’t managed by anything except by the Kubelet, but because the Kubelet runs on the node itself, it can’t do anything if the node fails.
 
 To make sure your app is restarted on another node, you need to have the pod managed by a ReplicationController or similar mechanism later on in this readme.
+
+### Introducing ReplicationControllers
+
+A Replication Controller(RC) is a Kubernetes resource that ensures its pods are always kept running. If a pod disappers for any reasons like in case of node disappearing from the cluster or because the pod was evicted from the node, the RC notes the pod missing and creates a replacement pod. Please refer to the image below
+
+![RC](https://user-images.githubusercontent.com/24803604/70711851-6c2c2e00-1d08-11ea-90cd-1feba139645d.png)
+
+> When a node fails, only pods backed by a ReplicationController are recreated.
+
+The RC in the figure only manage only a single pod but in general they are meant to create and manage a mutiple copies (replicas) of a pod. That's where RC got their name from.
+
+#### The operation of a ReplicationController
+
+The RC contantly monitors the list of running pods and makes sure the actual number of pods of a "type" always matches the desires number. If too few such pods are running, it creates new replica from pod template. If too much pods are running, it remove the excess replicas.
+
+You might be wondering how there can be more than the desired number of replicas. This can happen for a few reasons:
+
+- Someone creates a pod of the same type manually.
+- Someone changes an existing pod’s “type.”
+- Someone decreases the desired number of pods, and so on.
+
+I’ve used the term pod “type” a few times. But no such thing exists. Replication Controllers don’t operate on pod types, but on sets of pods that match a certain label selector, which I have told you previously.
+
+#### Introducing the controller reconciliation loop
+
+A ReplicationController’s job is to make sure that an exact number of pods always matches its label selector. If it doesn’t, the ReplicationController takes the appropriate action to reconcile the actual with the desired number.
+
+![controller-reconcilition-loop](https://user-images.githubusercontent.com/24803604/70713322-c5e22780-1d0b-11ea-9334-3d9213e86d3c.png)
+
+A ReplicationController has three essential parts:
+
+- A label selector, which determines what pods are in the ReplicationController’s scope
+- A replica count, which specifies the desired number of pods that should be running
+- A pod template, which is used when creating new pod replicas
+
+![RC three parts](https://user-images.githubusercontent.com/24803604/70715546-8964fa80-1d10-11ea-8e33-59f1a5a36698.png)
+
+> The three key parts of a
+ReplicationController (pod selector,
+replica count, and pod template)
+
+A ReplicationController’s replica count, the label selector, and even the pod template can all be modified at any time, but only changes to the replica count affect existing pods.
+
+Changes to the label selector and the pod template have no effect on existing pods. Changing the label selector makes the existing pods fall out of the scope of the ReplicationController, so the controller stops caring about them. ReplicationControllers also don’t care about the actual “contents” of its pods (the container images, environment variables, and other things) after they create the pod. The template therefore only affects new pods created by this ReplicationController. You can think of it as a cookie cutter for cutting out new pods.
+
+**BENEFITS**
+
+- It makes sure a pod (or multiple pod replicas) is always running by starting a
+new pod when an existing one goes missing.
+- When a cluster node fails, it creates replacement replicas for all the pods that
+were running on the failed node (those that were under the Replication-
+Controller’s control).
+- It enables easy horizontal scaling of pods—both manual and automatic
+
+**Note**:- A pod instance is never relocated to another node. Instead, the ReplicationController creates a completely new pod instance that has no relation to the instance it’s replacing.
+
+#### Creating a ReplicationController
+
+You’re going to create a file called **kubia-rc.yaml** (you can create it in any directory you want), or copy from this repo, where you’ll find the file with filename [kubia-rc.yaml](https://github.com/knrt10/kubernetes-basicLearning/blob/master/kubia-rc.yaml). The following listing shows the entire contents of the file.
+
+```yaml
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  name: kubia
+spec:
+  replicas: 3
+  selector:
+    app: kubia
+  template:
+    metadata:
+      labels:
+        app: kubia
+    spec:
+      containers:
+      - name: kubia
+        image: knrt10/kubia
+        ports:
+        - containerPort: 8080
+```
+
+When you post the file to the API server, Kubernetes creates a new ReplicationController named `kubia`, which makes sure three pod instances always match the label selector `app=kubia`. When there aren’t enough pods, new pods will be created from the provided pod template. The contents of the template are almost identical to pod defination we created before.
+
+The pod labels in the template must obviously match the label selector of the ReplicationController; otherwise the controller would create new pods indefinitely, because spinning up a new pod wouldn’t bring the actual replica count any closer to the desired number of replicas. To prevent such scenarios, the API server verifies the ReplicationController definition and will not accept it if it’s misconfigured.
+
+Not specifying the selector at all is also an option. In that case, it will be configured automatically from the labels in the pod template.
+
+To create the ReplicationController, use the `kubectl create` command, which you already know:
+
+`kubectl create -f kubia-rc.yaml`
+> replicationcontroller "kubia" created
 
 ## Todo
 
