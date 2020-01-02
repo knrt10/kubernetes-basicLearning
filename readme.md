@@ -84,6 +84,12 @@ This is just a simple demonstration to get a basic understanding of how kubernet
             - [The operation of a ReplicationController](#the-operation-of-a-replicationcontroller)
             - [Introducing the controller reconciliation loop](#introducing-the-controller-reconciliation-loop)
             - [Creating a ReplicationController](#creating-a-replicationcontroller)
+            - [Seeing the ReplicationController in action](#seeing-the-replicationcontroller-in-action)
+            - [Understanding exactly what caused the controller to create a new pod](#understanding-exactly-what-caused-the-controller-to-create-a-new-pod)
+            - [Moving pods in and out of the scope of a ReplicationController](#Moving-pods-in-and-out-of-the-scope-of-a-ReplicationController)
+            - [Changing the pod template](#changing-the-pod-template)
+            - [Horizontally scaling pods](#Horizontally-scaling-pods)
+            - [Deleting a ReplicationController](#deleting-a-replicationController)
 
 4. [Todo](#todo)
 
@@ -910,7 +916,7 @@ We'll now learn how Kubernetes checks if a container is still alive and restarts
 
 #### Keeping pods healthy
 
-One of the main benefits of using Kubernetes is the ability to give it a list of containers and let it keep those containers running somewhere in the cluster. You do this by creating a Pod resource and letting Kubernetes pick a worker node for it and run the pod’s containers on that node. But what if one of those containers dies?What if all containers of a pod die?
+One of the main benefits of using Kubernetes is the ability to give it a list of containers and let it keep those containers running somewhere in the cluster. You do this by creating a Pod resource and letting Kubernetes pick a worker node for it and run the pod’s containers on that node. But what if one of those containers dies? What if all containers of a pod die?
 
 As soon as a pod is scheduled to a node, the Kubelet on that node will run its containers and, from then on, keep them running as long as the pod exists. If the container’s main process crashes, the Kubelet will restart the container. If your application has a bug that causes it to crash every once in a while, Kubernetes will restart it automatically, so even without doing anything special in the app itself, running the app in Kubernetes automatically gives it the ability to heal itself.
 
@@ -942,7 +948,7 @@ You’re going to create a file called **kubia-liveness-probe.yaml** (you can cr
 
 ```yml
 apiVersion: v1
-kind: pod
+kind: Pod
 metadata:
   name: kubia-liveness
 spec:
@@ -1116,6 +1122,151 @@ To create the ReplicationController, use the `kubectl create` command, which you
 
 `kubectl create -f kubia-rc.yaml`
 > replicationcontroller "kubia" created
+
+#### Seeing the ReplicationController in action
+
+Because no pods exist with the `app=kubia` label, the ReplicationController should spin up three new pods from the pod template. List the pods to see if the ReplicationController has done what it’s supposed to:
+
+`kubectl get po`
+
+```bash
+NAME          READY   STATUS              RESTARTS   AGE
+kubia-53thy   0/1     ContainerCreating   0          6s
+kubia-k0xz6   0/1     ContainerCreating   0          6s
+kubia-q3vkg   0/1     ContainerCreating   0          6s
+```
+
+Indeed, it has! We wanted three pods, and it created three pods. It’s now managing those three pods. Next we'll mess with them a little to see how the ReplicationController responds. Now try deleting a pod, the RC will spawn another pod automatically. The ReplicationController has done its job again. It’s a nice little helper, isn’t it?
+
+#### Understanding exactly what caused the controller to create a new pod
+
+The controller is responding to the deletion of a pod by creating a new replacement pod as we did above. Well, technically, it isn’t responding to the deletion itself, but the resulting state—the inadequate number of pods. 
+
+While a ReplicationController is immediately notified about a pod being deleted (the API server allows clients to watch for changes to resources and resource lists), that’s not what causes it to create a replacement pod. The notification triggers the controller to check the actual number of pods and take appropriate action.
+
+![pod-deleting-info](https://user-images.githubusercontent.com/24803604/71673599-d2700380-2d3e-11ea-92c6-fc36300db222.png)
+
+> If a pod disappears, the ReplicationController sees too few pods and creates a new replacement pod.
+
+Seeing the ReplicationController respond to the manual deletion of a pod isn’t too interesting, so let’s look at a better example. If you’re using Google Kubernetes Engine to run these examples, you have a three-node Kubernetes cluster. You’re going to disconnect one of the nodes from the network to simulate a node failure.
+
+**Note**:- If you’re using Minikube, you can’t do this exercise, because you only have one node that acts both as a master and a worker node.
+
+If a node fails in the non-Kubernetes world, the ops team would need to migrate the applications running on that node to other machines manually. Kubernetes, on the other hand, does that automatically. Soon after the ReplicationController detects that its pods are down, it will spin up new pods to replace them.
+
+Let’s see this in action. You need to ssh into one of the nodes with the `gcloud compute ssh` command and then shut down its network interface with `sudo ifconfig eth0 down`, as shown in the following below.
+
+```bash
+gcloud compute ssh gke-kubia-default-pool-b46381f1-zwko`
+
+Enter passphrase for key '/home/knrt10/.ssh/google_compute_engine':
+Welcome to Kubernetes v1.16.2!
+```
+
+...
+
+```bash
+knrt10@gke-kubia-default-pool-b46381f1-zwko ~ $ sudo ifconfig eth0 down
+```
+
+When you shut down the network interface, the ssh session will stop responding, so you need to open up another terminal or hard-exit from the ssh session. In the new terminal you can list the nodes to see if Kubernetes has detected that the node is down. This takes a minute or so. Then, the node’s status is shown as `NotReady`:
+
+![GCE node info](https://user-images.githubusercontent.com/24803604/71674165-27604980-2d40-11ea-9f4e-4aa27b148ff5.png)
+
+If you list the pods now, you’ll still see the same three pods as before, because Kubernetes waits a while before rescheduling pods (in case the node is unreachable because of a temporary network glitch or because the Kubelet is restarting). If the node stays unreachable for several minutes, the status of the pods that were scheduled to that node changes to `Unknown`. At that point, the ReplicationController will immediately spin up a new pod. You can see this by listing the pods again:
+
+![GCE pod info](https://user-images.githubusercontent.com/24803604/71674301-75754d00-2d40-11ea-8d5b-c27598eb55a5.png)
+
+Looking at the age of the pods, you see that the kubia-dmdck pod is new. You again have three pod instances running, which means the ReplicationController has again done its job of bringing the actual state of the system to the desired state.
+
+The same thing happens if a node fails (either breaks down or becomes unreachable). No immediate human intervention is necessary. The system heals itself automatically. To bring the node back, you need to reset it with the following command:
+
+`gcloud compute instances reset gke-kubia-default-pool-b46381f1-zwko`
+
+When the node boots up again, its status should return to `Ready`, and the pod whose status was `Unknown` will be deleted.
+
+#### Moving pods in and out of the scope of a ReplicationController
+
+Pods created by a ReplicationController aren’t tied to the ReplicationController in any way. At any moment, a ReplicationController manages pods that match its label selector. By changing a pod’s labels, it can be removed from or added to the scope of a ReplicationController. It can even be moved from one ReplicationController to another.
+
+**TIP**:- Although a pod isn’t tied to a ReplicationController, the pod does reference it in the `metadata.ownerReferences` field, which you can use to easily find which ReplicationController a pod belongs to.
+
+If you change a pod’s labels so they no longer match a ReplicationController’s label selector, the pod becomes like any other manually created pod. It’s no longer managed by anything. If the node running the pod fails, the pod is obviously not rescheduled. But keep in mind that when you changed the pod’s labels, the replication controller noticed one pod was missing and spun up a new pod to replace it.
+
+`kubectl label po kubia-dmdck app=kubia2 --overwrite`
+
+The --overwrite argument is necessary; otherwise kubectl will only print out a warning and won’t change the label, to prevent you from inadvertently changing an existing label’s value when your intent is to add a new one. There, you now have four pods altogether: one that isn’t managed by your ReplicationController and three that are. Among them is the newly created pod.
+
+![RC pod relabelling](https://user-images.githubusercontent.com/24803604/71676804-c38d4f00-2d46-11ea-83fc-ad635ad2ae3a.png)
+
+> Removing a pod from the scope of a ReplicationController by changing its labels
+
+ReplicationController spins up pod kubia-2qneh to bring the number back up to three. Pod kubia-dmdck is now completely independent and will keep running until you delete it manually (you can do that now, because you don’t need it anymore).
+
+**REMOVING PODS FROM CONTROLLERS IN PRACTICE**
+
+Removing a pod from the scope of the ReplicationController comes in handy when you want to perform actions on a specific pod. For example, you might have a bug that causes your pod to start behaving badly after a specific amount of time or a specific event. If you know a pod is malfunctioning, you can take it out of the ReplicationController’s scope, let the controller replace it with a new one, and then debug or play with the pod in any way you want. Once you’re done, you delete the pod.
+
+#### Changing the pod template
+
+A ReplicationController’s pod template can be modified at any time. Changing the pod template is like replacing a cookie cutter with another one. It will only affect the cookies you cut out afterward and will have no effect on the ones you’ve already cut (see figure below). To modify the old pods, you’d need to delete them and let the Replication- Controller replace them with new ones based on the new template.
+
+![pod template change](https://user-images.githubusercontent.com/24803604/71677160-b3c23a80-2d47-11ea-9773-3985f1cfc15e.png)
+
+> Changing a ReplicationController’s pod template only affects pods created afterward and has no effect on existing pods.
+
+As an exercise, you can try editing the ReplicationController and adding a label to the pod template. You can edit the ReplicationController with the following command:
+
+`kubectl edit rc kubia`
+
+This will open the ReplicationController’s YAML definition in your default text editor. Find the pod template section and add an additional label to the metadata. After you save your changes and exit the editor, kubectl will update the ReplicationController and print the following message:
+
+`replicationcontroller "kubia" edited`
+
+You can now list pods and their labels again and confirm that they haven’t changed. But if you delete the pods and wait for their replacements to be created, you’ll see the new label.
+
+Editing a ReplicationController like this to change the container image in the pod template, deleting the existing pods, and letting them be replaced with new ones from the new template could be used for upgrading pods, but you’ll learn a better way of doing it later.
+
+#### Horizontally scaling pods
+
+Scaling the number of pods up or down is as easy as changing the value of the replicas field in the ReplicationController resource. After the change, the ReplicationController will either see too many pods exist (when scaling down) and delete part of them, or see too few of them (when scaling up) and create additional pods. You already know the command below
+
+`kubectl scale rc kubia --replicas=10`
+
+but instead of using the `kubectl scale` command, you’re going to scale it in a declarative way by editing the ReplicationController’s definition: 
+
+`kubectl edit rc kubia`
+
+When the text editor opens, find the spec.replicas field and change its value to 10. Now check your listing.
+
+```bash
+kubectl get rc
+
+NAME DESIRED CURRENT READY AGE
+kubia 10      10      4     21m
+```
+
+Now scale back down to 3. You can use the kubectl scale command:
+
+`kubectl scale rc kubia --replicas=3`
+
+Horizontally scaling pods in Kubernetes is a matter of stating your desire: "I want to have x number of instances running." You’re not telling Kubernetes what or how to do it. You’re just specifying the desired state.
+
+This declarative approach makes interacting with a Kubernetes cluster easy. Imagine if you had to manually determine the current number of running instances and then explicitly tell Kubernetes how many additional instances to run. That’s more work and is much more error-prone. Changing a simple number is much easier and later, you’ll learn that even that can be done by Kubernetes itself if you enable horizontal pod auto-scaling.
+
+#### Deleting a ReplicationController
+
+When you delete a ReplicationController through kubectl delete, the pods are also deleted. But because pods created by a ReplicationController aren’t an integral part of the ReplicationController, and are only managed by it, you can delete only the ReplicationController and leave the pods running, as shown below
+
+![deleing-RC](https://user-images.githubusercontent.com/24803604/71678495-ec174800-2d4a-11ea-909f-e87fd2f33bdf.png)
+
+This may be useful when you initially have a set of pods managed by a ReplicationController, and then decide to replace the ReplicationController with a `ReplicaSet`. You can do this without affecting the pods and keep them running without interruption while you replace the ReplicationController that manages them.
+
+When deleting a ReplicationController with kubectl delete, you can keep its pods running by passing the `--cascade=false` option to the command. Try that now:
+
+`kubectl delete rc kubia --cascade=false`
+
+You’ve deleted the ReplicationController so the pods are on their own. They are no longer managed. But you can always create a new ReplicationController with the proper label selector and make them managed again.
 
 ## Todo
 
