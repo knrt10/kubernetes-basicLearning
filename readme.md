@@ -90,6 +90,13 @@ This is just a simple demonstration to get a basic understanding of how kubernet
             - [Changing the pod template](#changing-the-pod-template)
             - [Horizontally scaling pods](#Horizontally-scaling-pods)
             - [Deleting a ReplicationController](#deleting-a-replicationController)
+        - [Using ReplicaSets instead of ReplicationControllers](#using-replicasets-instead-of-replicationControllers)
+            - [Defining a ReplicaSet](#defining-a-replicaSet)
+            - [Using the ReplicaSets more expressive label selectors](#Using-the-ReplicaSets-more-expressive-label-selectors)
+        - [Running exactly one pod on each node with DaemonSets](#running-exactly-one-pod-on-each-node-with-daemonsets)
+            - [Using a DaemonSet to run a pod on every node](#using-a-daemonset-to-run-a-pod-on-every-node)
+            - [Explaning Daemon sets with an example](#explaning-daemon-sets-with-an-example)
+            - [Creating the DaemonSet](#creating-the-daemonset)
 
 4. [Todo](#todo)
 
@@ -791,7 +798,7 @@ Namespaces enable you to separate resources that don’t belong together into no
 A namespace is a Kubernetes resource like any other, so you can create it by posting a
 YAML file to the Kubernetes API server. Let’s see how to do this now. 
 
-You’re going to create a file called **custom-namespace.yml** (you can create it in any directory you want), or copy from this repo, where you’ll find the file with filename [custom-namespace.yml](https://github.com/knrt10/kubernetes-basicLearning/blob/master/custom-namespace.yml). The following listing shows the entire contents of the file.
+You’re going to create a file called **custom-namespace.yaml** (you can create it in any directory you want), or copy from this repo, where you’ll find the file with filename [custom-namespace.yaml](https://github.com/knrt10/kubernetes-basicLearning/blob/master/custom-namespace.yaml). The following listing shows the entire contents of the file.
 
 ```yml
 apiVersion: v1
@@ -1267,6 +1274,160 @@ When deleting a ReplicationController with kubectl delete, you can keep its pods
 `kubectl delete rc kubia --cascade=false`
 
 You’ve deleted the ReplicationController so the pods are on their own. They are no longer managed. But you can always create a new ReplicationController with the proper label selector and make them managed again.
+
+### Using ReplicaSets instead of ReplicationControllers
+
+Initially, ReplicationControllers were the only Kubernetes component for replicating pods and rescheduling them when nodes failed. Later, a similar resource called a ReplicaSet was introduced. It’s a new generation of ReplicationController and replaces it completely (ReplicationControllers will eventually be deprecated).
+
+We could have started this section by creating a ReplicaSet instead of a ReplicationController, but I felt it would be a good idea to start with what was initially available in Kubernetes **(Please Don't report me :wink:)**. Plus, we'll still see ReplicationControllers used in the wild, so it’s good for you to know about them. That said, you should always create ReplicaSets instead of ReplicationControllers from now on. They’re almost identical, so you shouldn’t have any trouble using them instead.
+
+A ReplicaSet behaves exactly like a ReplicationController, but it has more expressive pod selectors. Whereas a ReplicationController’s label selector only allows matching pods that include a certain label, a ReplicaSet’s selector also allows matching pods that lack a certain label or pods that include a certain label key, regardless of its value.
+
+Also, for example, a single ReplicationController can’t match pods with the label `env=production` and those with the label `env=devel` at the same time. It can only match either pods with the env=production label or pods with the env=devel label. But a single ReplicaSet can match both sets of pods and treat them as a single group.
+
+Similarly, a ReplicationController can’t match pods based merely on the presence of a label key, regardless of its value, whereas a ReplicaSet can. For example, a ReplicaSet can match all pods that include a label with the key env, whatever its actual value is(you can think of it as env=*).
+
+#### Defining a ReplicaSet
+
+You’re going to create a ReplicaSet now to see how the orphaned pods that were created by your ReplicationController and then abandoned earlier can now be adopted by a ReplicaSet. 
+
+You’re going to create a file called **kubia-replicaset.yaml** (you can create it in any directory you want), or copy from this repo, where you’ll find the file with filename [kubia-replicaset.yaml](https://github.com/knrt10/kubernetes-basicLearning/blob/master/kubia-replicaset.yaml). The following listing shows the entire contents of the file.
+
+```yml
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: kubia
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: kubia
+  template:
+    metadata:
+      labels:
+        app: kubia
+    spec:
+      containers:
+      - name: kubia
+        image: knrt10/kubia
+        ports:
+        - containerPort: 8080
+```
+
+The first thing to note is that ReplicaSets aren’t part of the v1 API, so you need to ensure you specify the proper apiVersion when creating the resource. You’re creating a resource of type ReplicaSet which has much the same contents as the ReplicationController you created earlier.
+
+The only difference is in the selector. Instead of listing labels the pods need to have directly under the selector property, you’re specifying them under selector `matchLabels`. This is the simpler (and less expressive) way of defining label selectors in a ReplicaSet. Because you still have three pods matching the app=kubia selector running from earlier, creating this ReplicaSet will not cause any new pods to be created. The ReplicaSet will take those existing three pods under its wing. You can create ReplicaSet using `kubectl create` command. Then examine using `kubectl describe` command. 
+
+As you can see, the ReplicaSet isn’t any different from a ReplicationController. It’s showing it has three replicas matching the selector. If you list all the pods, you’ll see they’re still the same three pods you had before. The ReplicaSet didn’t create any new ones.
+
+#### Using the ReplicaSets more expressive label selectors
+
+The main improvements of ReplicaSets over ReplicationControllers are their more expressive label selectors. You intentionally used the simpler matchLabels selector in the first ReplicaSet example to see that ReplicaSets are no different from ReplicationControllers. 
+
+You can add additional expressions to the selector. As in the example, each expression must contain a key, an operator, and possibly (depending on the operator) a list of values. You’ll see four valid operators:
+
+- `In`—Label’s value must match one of the specified values.
+- `NotIn`—Label’s value must not match any of the specified values.
+- `Exists`—Pod must include a label with the specified key (the value isn’t important).
+When using this operator, you shouldn’t specify the values field.
+- `DoesNotExist`—Pod must not include a label with the specified key. The values
+property must not be specified.
+
+If you specify multiple expressions, all those expressions must evaluate to true for the selector to match a pod. If you specify both matchLabels and matchExpressions, all the labels must match and all the expressions must evaluate to true for the pod to match the selector.
+
+This was a quick introduction to ReplicaSets as an alternative to ReplicationControllers. Remember, always use them instead of ReplicationControllers, but you may still find ReplicationControllers in other people’s deployments.
+
+Now, delete the ReplicaSet to clean up your cluster a little. You can delete the ReplicaSet the same way you’d delete a ReplicationController:
+
+`kubectl delete rs kubia`
+> replicaset "kubia" deleted
+
+Deleting the ReplicaSet should delete all the pods. List the pods to confirm that’s the case.
+
+### Running exactly one pod on each node with DaemonSets
+
+Both RC and RS are used for running specifics number of pods deployed anywhere in Kubernetes cluster. But certain cases exist when you want a pod to run on each and every node in the cluster (and each node needs to run exactly one instance of the pod). Those cases include infrastructure related pods that perform system-level operations.
+
+For example, you’ll want to run a log collector and a resource monitor on every node. Another good example is Kubernetes’ own kube-proxy process, which needs to run on all nodes to make services work.
+
+![Daemon Sets](https://user-images.githubusercontent.com/24803604/71682868-9183e900-2d56-11ea-9cab-e645ef0564b1.png)
+
+> DaemonSets run only a single pod replica on each node, whereas ReplicaSets scatter them around the whole cluster randomly.
+
+#### Using a DaemonSet to run a pod on every node
+
+To run a pod on all cluster nodes, you create a DaemonSet object, which is much like a ReplicationController or a ReplicaSet, except that pods created by a DaemonSet already have a target node specified and skip the Kubernetes Scheduler. They aren’t scattered around the cluster randomly.
+
+A DaemonSet makes sure it creates as many pods as there are nodes and deploys each one on its own node, as shown above. Whereas a ReplicaSet (or ReplicationController) makes sure that a desired number of pod replicas exist in the cluster, a DaemonSet doesn’t have any notion of a desired replica count. It doesn’t need it because its job is to ensure that a pod matching its pod selector is running on each node.
+
+If a node goes down, the DaemonSet doesn’t cause the pod to be created elsewhere. But when a new node is added to the cluster, the DaemonSet immediately deploys a new pod instance to it. It also does the same if someone inadvertently deletes one of the pods, leaving the node without the DaemonSet’s pod. Like a ReplicaSet, a DaemonSet creates the pod from the pod template configured in it.
+
+#### Explaning Daemon sets with an example
+
+Let’s imagine having a daemon called `ssd-monitor` that needs to run on all nodes that contain a solid-state drive (SSD). You’ll create a DaemonSet that runs this daemon on all nodes that are marked as having an SSD. The cluster administrators have added the `disk=ssd` label to all such nodes, so you’ll create the DaemonSet with a node selector that only selects nodes with that label,
+
+![creating daemon sets](https://user-images.githubusercontent.com/24803604/71683593-9c3f7d80-2d58-11ea-94a0-ffc9c3cd4071.png)
+
+You’ll create a DaemonSet that runs a mock ssd-monitor process, which prints "SSD OK" to the standard output every five seconds. I’ve already prepared the mock container image and pushed it to Docker Hub, so you can use it instead of building your own. 
+
+You’re going to create a file called **ssd-monitor-daemonset.yaml** (you can create it in any directory you want), or copy from this repo, where you’ll find the file with filename [ssd-monitor-daemonset.yaml](https://github.com/knrt10/kubernetes-basicLearning/blob/master/ssd-monitor-daemonset.yaml). The following listing shows the entire contents of the file.
+
+```yml
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: ssd-monitor
+spec:
+  selector:
+    matchLabels:
+      app: ssd-monitor
+  template:
+    metadata:
+      labels:
+        app: ssd-monitor
+    spec:
+      nodeSelector:
+        disk: ssd
+      containers:
+      - name: main
+        image: knrt10/ssd-monitor
+```
+
+You’re defining a DaemonSet that will run a pod with a single container based on the `knrt10/ssd-monitor` container image. An instance of this pod will be created for each node that has the `disk=ssd` label.
+
+#### Creating the DaemonSet
+
+Use `kubectl create` command as you know.
+
+`kubectl create -f ssd-monitor-daemonset.yaml`
+
+Let’s see the created DaemonSet:
+
+`kubectl get ds`
+
+```bash
+NAME          DESIRED   CURRENT   READY   UP-TO-DATE   AVAILABLE   NODE SELECTOR   AGE
+ssd-monitor   0         0         0       0            0           disk=ssd        18s
+```
+
+Those zeroes look strange. Didn’t the DaemonSet deploy any pods? List the pods:
+
+`kubectl get po`
+> No resources found.
+
+Where are the pods? Do you know what’s going on? Yes, you forgot to label your nodes with the disk=ssd label. No problem—you can do that now. The DaemonSet should detect that the nodes’ labels have changed and deploy the pod to all nodes with a matching label. Let’s see if that’s true. The DaemonSet should have created one pod now. Let’s see:
+
+`kubectl label node minikube disk=ssd`
+
+```bash
+NAME                READY   STATUS    RESTARTS   AGE
+ssd-monitor-zs6sr   1/1     Running   0          6s
+```
+
+Okay; so far so good. If you have multiple nodes and you add the same label to further nodes, you’ll see the DaemonSet spin up pods for each of them. Now, imagine you’ve made a mistake and have mislabeled one of the nodes. It has a spinning disk drive, not an SSD. What happens if you change the node’s label?
+
+The pod is being terminated. But you knew that was going to happen, right? This wraps up your exploration of DaemonSets, so you may want to delete your ssd-monitor DaemonSet. If you still have any other daemon pods running, you’ll see that deleting the DaemonSet deletes those pods as well.
 
 ## Todo
 
