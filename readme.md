@@ -97,6 +97,8 @@ This is just a simple demonstration to get a basic understanding of how kubernet
             - [Using a DaemonSet to run a pod on every node](#using-a-daemonset-to-run-a-pod-on-every-node)
             - [Explaning Daemon sets with an example](#explaning-daemon-sets-with-an-example)
             - [Creating the DaemonSet](#creating-the-daemonset)
+        - [Running Pod that perform a single completable task](#running-pod-that-perform-a-single-completable-task)
+            - [Introducing the Job resource](#introducing-the-job-resource)
 
 4. [Todo](#todo)
 
@@ -1428,6 +1430,18 @@ ssd-monitor-zs6sr   1/1     Running   0          6s
 Okay; so far so good. If you have multiple nodes and you add the same label to further nodes, you’ll see the DaemonSet spin up pods for each of them. Now, imagine you’ve made a mistake and have mislabeled one of the nodes. It has a spinning disk drive, not an SSD. What happens if you change the node’s label?
 
 The pod is being terminated. But you knew that was going to happen, right? This wraps up your exploration of DaemonSets, so you may want to delete your ssd-monitor DaemonSet. If you still have any other daemon pods running, you’ll see that deleting the DaemonSet deletes those pods as well.
+
+### Running Pod that perform a single completable task
+
+So far, I have told about the pods that run continuously. We'll have cases that need to terminate once the task is completed. ReplicationContollers, RelicaSets, DaemonSets run continuously task that are never considered completed. Process in these tasks are restarted when they exit, but we do not want that. We want to stop once the process is completed. 
+
+#### Introducing the Job resource
+
+Kubernetes includes support for this through Job resource, which is similar to other resources we have discussed so far, but it allows you to run a pod whose container isn’t restarted when the process running inside finishes successfully. Once it does, the pod is considered complete.
+
+In the event of node failure, pod on that node that are managed by the Job will be reschduled to other nodes the way ReplicaSets are. In the event of a failure of the process itself (when the process returns an error exit code), the Job can be configured to either restart the container or not.
+
+As shown below, it tells how a pod created by a Job is rescheduled to a new node if the node it was initially scheduled to fails. It also shows both a managed pod, which isn’t rescheduled, and a pod backed by a ReplicaSet, which is.
 
 ## Todo
 
