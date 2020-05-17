@@ -99,6 +99,8 @@ This is just a simple demonstration to get a basic understanding of how kubernet
             - [Creating the DaemonSet](#creating-the-daemonset)
         - [Running Pod that perform a single completable task](#running-pod-that-perform-a-single-completable-task)
             - [Introducing the Job resource](#introducing-the-job-resource)
+            - [Defining a Job resource](#defining-a-job-resource)
+            - [Seeing a Job run a pod](#seeing-a-job-run-a-pod)
 
 4. [Todo](#todo)
 
@@ -1442,6 +1444,51 @@ Kubernetes includes support for this through Job resource, which is similar to o
 In the event of node failure, pod on that node that are managed by the Job will be reschduled to other nodes the way ReplicaSets are. In the event of a failure of the process itself (when the process returns an error exit code), the Job can be configured to either restart the container or not.
 
 As shown below, it tells how a pod created by a Job is rescheduled to a new node if the node it was initially scheduled to fails. It also shows both a managed pod, which isn’t rescheduled, and a pod backed by a ReplicaSet, which is.
+
+For example, Jobs are useful for ad hoc tasks, where it’s crucial that the task finishes properly. You could run the task in an unmanaged pod and wait for it to finish, but in the event of a node failing or the pod being evicted from the node while it is performing its task, you’d need to manually recreate it. Doing this manually doesn’t make sense especially if the job takes hours to complete.
+
+An example of such a job would be if you had data stored somewhere and you needed to transform and export it somewhere. You’re going to emulate this by running a container image built on top of the busybox image, which invokes the sleep command for two minutes. I’ve already built the image and pushed it to Docker Hub, but you can peek into its Dockerfile in the book’s code archive.
+
+![Job resource](https://user-images.githubusercontent.com/24803604/72050330-e2f81f00-32e6-11ea-9bba-ec9603835138.png)
+
+> Pods managed by Jobs are rescheduled until they finish successfully.
+
+#### Defining a Job resource
+
+Create the Job manifest as in the following listing. You’re going to create a file called **exporter.yaml** (you can create it in any directory you want), or copy from this repo, where you’ll find the file with filename [exporter.yaml](https://github.com/knrt10/kubernetes-basicLearning/blob/master/exporter.yaml). The following listing shows the entire contents of the file.
+
+```yml
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: batch-job
+spec:
+  template:
+    metadata:
+      labels:
+        app: batch-job
+    spec:
+      restartPolicy: OnFailure
+      containers:
+      - name: main
+        image: knrt10/batch-job
+```
+
+Jobs are part of the `batch` API group and `v1 API` version. The YAML defines a resource of type Job that will run the `knrt10/batch-job` image, which invokes a process that runs for exactly 120 seconds and then exits. The image is already been pushed on dockerhub by me.
+
+In a pod’s specification, you can specify what Kubernetes should do when the processes running in the container finish. This is done through the `restartPolicy` pod spec property, which defaults to `Always`. Job pods can’t use the default policy, because they’re not meant to run indefinitely. Therefore, you need to explicitly set the restart policy to either `OnFailure` or `Never`. This setting is what prevents the container from being restarted when it finishes (not the fact that the pod is being managed by a Job resource).
+
+#### Seeing a Job run a pod
+
+After you create this Job with the `kubectl create` command, you should see it start up
+a pod immediately:
+
+`kubectl get jobs`
+
+```bash
+NAME      DESIRED   SUCCESSFUL  AGE
+batch-job 1         0           2s
+```
 
 ## Todo
 
