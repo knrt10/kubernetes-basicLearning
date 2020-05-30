@@ -1,0 +1,8 @@
+apiVersion: v1
+data:
+  foo: "foo"
+  bar: "bar"
+  foo-bar: "foo-bar"
+kind: ConfigMap
+metadata:
+  name: fortune-config
