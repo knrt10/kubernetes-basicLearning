@@ -6,6 +6,8 @@ This is just a simple demonstration to get a basic understanding of how kubernet
 
 **Important :-** By seeing size of readme you might have second thoughts but to be honest if you work from start you won't experience any problem and learn along the way. 
 
+[![Say Thanks!](https://img.shields.io/badge/Say%20Thanks-!-1EAEDB.svg)](https://saythanks.io/to/tripathi.kautilya@gmail.com)
+
 ## Contents
 
 - [Requirements](#requirements)
