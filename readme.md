@@ -214,10 +214,12 @@ The Node.js image on which you’ve based your image contains the bash shell, so
 
 `docker exec -it kubia-container bash`
 
-This will run bash inside the existing **kubia-container** container. The **bash** process will have the same Linux namespaces as the main container process. This allows you to explore the container from within and see how Node.js and your app see the system when running inside the container. The **-it** option is shorthand for two options:
+This will run bash inside the existing **kubia-container** container. The **bash** process will have the same Linux namespaces as the main container process. This allows you to explore the container from within and see how Node.js and your app see the system when running inside the container. 
 
-- -i, which makes sure STDIN is kept open. You need this for entering commands into the shell.
-- -t, which allocates a pseudo terminal (TTY).
+The **`-it`** option is shorthand for two options:
+
+- `-i`, which makes sure STDIN is kept open. You need this for entering commands into the shell.
+- `-t`, which allocates a pseudo terminal (TTY).
 
 #### Exploring container from within
 
