@@ -117,18 +117,18 @@ You need to:
 
 #### What is Docker
 
-Docker is a platform for packaging, distribution and running applications. It allows you to package your application together with its whole environment. This can be either a few libraries that the app requires or even all the files that are usually available on the filesystem of an installed operating system. Docker makes it possible to transfer this package to a central repository from which it can then be transferred to any computer running Docker and executed there
+Docker is a platform for packaging, distribution and running applications. It allows you to package your application together with its whole environment. This can be either a few libraries that the app requires or even all the files that are usually available on the filesystem of an installed operating system. Docker makes it possible to transfer this package to a central repository from which it can then be transferred to any computer running Docker and executed there.
 
 Three main concepts in Docker comprise this scenario:
 - **Images** :— A Docker based container image is something you package your application and its environment. It contains the filesystem that will be available to the application and other metadata, such as the path to the executable that should be executed when the image is run.
-- **Registries** :- A Docker Registry is a repository that stores your Docker images and facilitates easy sharing of those images between different people and computers. When you build your image, you can either run it on the computer you’ve built it on, or you can push (upload) the image to a registry and then pull (download) it on another computer and run it there. Certain registries are public, allowing anyone to pull images from it, while others are private, only accessible to certain people or machines.
+- **Registries** :- A Docker Registry is a repository that stores your Docker images and facilitates easy sharing of those images between different users and computers. When you build your image, you can either run it on the computer you’ve built it on, or you can push (upload) the image to a registry and then pull (download) it on another computer and run it there. Certain registries are public, allowing anyone to pull images from it, while others are private, only accessible to certain people or machines.
 - **Containers** :- A Docker-based container is a regular Linux container created from a Docker-based container image. A running container is a process running on the host running Docker, but it’s completely isolated from both the host and all other processes running on it. The process is also resource-constrained, meaning it can only access and use the number of resources (CPU, RAM, and so on) that are allocated to it.
 
 ## Learning while working
 
 #### Creating a web server
 
-You first need to create a container image. We will use docker for that. We are creating a simple web server to see how kubernetes works.
+You first need to create a container image. We will use Docker for that. We are creating a simple web server to see how Kubernetes works.
 
 - create a file `app.js` and copy this code into it
 
@@ -146,7 +146,7 @@ www.listen(8080);
 
 ```
 
-Now we will create a docker file that will run on a cluster when we create a docker image. 
+Now we will create a Docker file that will run on a cluster when we create a Docker image. 
 
 - create a file named `Dockerfile` and copy this code into it.
 
@@ -161,7 +161,7 @@ ENTRYPOINT [ "node", "app.js" ]
 
 ```
 
-#### Building docker image
+#### Building Docker image
 
 Make sure your **docker server is up and running**. Now we will create a docker image in our local machine. Open your terminal in the current project's folder and run
 
