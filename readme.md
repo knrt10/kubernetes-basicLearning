@@ -187,24 +187,24 @@ This tells Docker to run a new container called **kubia-container** from the kub
 
 #### Accessing your application
 
-Run in your terminal
+Run in your terminal:
 
 `curl localhost:8080`
 > You’ve hit 44d76963e8e1
 
 #### Listing all your running containers
 
-You can list all your running containers by this command.
+You can list all your running containers with this command.
 
 `docker ps`
 
 The `docker ps` command only shows the most basic information about the containers.
 
-Also to get additional information about a container run this command
+To get additional information about a container, run this command.
 
 `docker inspect kubia-container`
 
-You can see all the container by
+You can see all the containers by running:
 
 `docker ps -a`
 
