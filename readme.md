@@ -243,13 +243,15 @@ root@c61b9b509f9a:/# ls
 app.js  bin  boot  dev  etc  home  lib  lib64  media  mnt  opt  package-lock.json  proc  root  run  sbin  srv  sys  tmp  usr  var
 ```
 
-It contains the **app.js** file and other system directories that are part of the node:8 base image you’re using. To exit the container, you exit the shell by running the **exit** command and you’ll be returned to your host machine (like logging out of an ssh session, for example).
+It contains the **app.js** file and other system directories that are part of the `node:8` base image you’re using. 
+
+To exit the container, you exit the shell by running the **exit** command and you’ll be returned to your host machine (like logging out of an ssh session, for example).
 
 #### Stopping and removing a container
 
 `docker stop kubia-container`
 
-This will stop the main process running in the container and consequently stop the container because no other processes are running inside the container. The container itself still exists and you can see it with **docker ps -a**. The -a option prints out all the containers, those running and those that have been stopped. To truly remove a container, you need to remove it with the **docker rm** command:
+This will stop the main process running in the container and consequently stop the container because no other processes are running inside the container. The container itself still exists and you can see it with **docker ps -a**. The `-a` option prints out all the containers, those running and those that have been stopped. To truly remove a container, you need to remove it with the **docker rm** command:
 
 `docker rm kubia-container`
 
@@ -257,23 +259,25 @@ This deletes the container. All its contents are removed and it can’t be start
 
 ### Pushing the image to an image registry
 
-The image you’ve built has so far only been available on your local machine. To allow you to run it on any other machine, you need to push the image to an external image registry. For the sake of simplicity, you won’t set up a private image registry and will instead push the image to [Docker Hub](http://hub.docker.com)
+The image you’ve built has so far only been available on your local machine. To allow you to run it on any other machine, you need to push the image to an external image registry. For the sake of simplicity, you won’t set up a private image registry and will instead push the image to [Docker Hub](http://hub.docker.com).
 
-Before you do that, you need to re-tag your image according to Docker Hub’s rules. Docker Hub will allow you to push an image if the image’s repository name starts with your Docker Hub ID. You create your Docker Hub ID by registering at [hub-docker](http://hub.docker.com). I’ll use my own ID (knrt10) in the following examples. Please change every occurrence with your own ID.
+Before you do that, you need to re-tag your image according to Docker Hub’s rules. Docker Hub will allow you to push an image if the image’s repository name starts with your Docker Hub ID. 
 
-Once you know your ID, you’re ready to rename your image, currently tagged as kubia, to knrt10/kubia (replace knrt10 with your own Docker Hub ID):
+You create your Docker Hub ID by registering at [hub-docker](http://hub.docker.com). I’ll use my own ID (`knrt10`) in the following examples. Please change every occurrence with your own ID.
+
+Once you know your ID, you’re ready to rename your image, currently tagged as `kubia`, to `knrt10/kubia` (replace knrt10 with your own Docker Hub ID):
 
 `docker tag kubia knrt10/kubia`
 
-This doesn’t rename the tag; it creates an additional tag for the same image. You can confirm this by listing the images stored on your system with the docker images command, as shown in the following listing.
+This doesn’t rename the tag; it creates an additional tag for the same image. You can confirm this by listing the images stored on your system with the Docker images command, as shown in the following listing.
 
 `docker images | head`
 
-As you can see, both kubia and knrt10/kubia point to the same image ID, so they’re in fact one single image with two tags.
+As you can see, both `kubia` and `knrt10/kubia` point to the same image ID, so they’re in fact one single image with two tags.
 
 #### Pushing image to docker hub
 
-Before you can push the image to Docker Hub, you need to log in under your user ID with the **docker login** command. Once you’re logged in, you can finally push the yourid/kubia image to Docker Hub like this:
+Before you can push the image to Docker Hub, you need to log in under your user ID with the **docker login** command. Once you’re logged in, you can finally push the `yourid/kubia` image to Docker Hub like this:
 
 `docker push knrt10/kubia`     
 
