@@ -14,7 +14,7 @@ This is just a simple demonstration to get a basic understanding of how Kubernet
 - **Docker**
   - [What is Docker?](#what-is-docker)
   - [Creating a web server](#creating-a-web-server)
-  - [Building Docker image](#building-docker-image)
+  - [Building Docker Image](#building-docker-image)
   - [Getting Docker images](#getting-docker-images)
   - [Running the container image](#running-the-container-image)
   - [Accessing your application](#accessing-your-application)
@@ -148,7 +148,7 @@ www.listen(8080);
 
 Now we will create a Docker file that will run on a cluster when we create a Docker image. 
 
-- create a file named `Dockerfile` and copy this code into it.
+- Create a file named `Dockerfile` and copy this code into it.
 
 ```Dockerfile
 FROM node:8 
@@ -161,15 +161,17 @@ ENTRYPOINT [ "node", "app.js" ]
 
 ```
 
-#### Building Docker image
+#### Building Docker Image
 
-Make sure your **docker server is up and running**. Now we will create a docker image in our local machine. Open your terminal in the current project's folder and run
+Make sure your **Docker server is up and running**. Now we will create a Docker image in our local machine. Open your terminal in the current project's folder and run
 
 `docker build -t kubia .`
 
-You’re telling Docker to build an image called **kubia** based on the contents of the current directory (note the dot at the end of the build command). Docker will look for the Dockerfile in the directory and build the image based on the instructions in the file.
+You’re telling Docker to build an image called **kubia** based on the contents of the current directory (note the dot `.` at the end of the build command). Docker will look for the Dockerfile in the directory and build the image based on the instructions in the file.
 
-Now check your docker image created by running
+Now check your docker image created by running:
+
+`docker images`
 
 #### Getting docker images
 
