@@ -283,11 +283,30 @@ Before you can push the image to Docker Hub, you need to log in under your user 
 
 ### What is Kubernetes
 
-Years ago, most software applications were big monoliths, running either as a single process or as a small number of processes spread across a handful of servers. Today, these big monolithic legacy applications are slowly being broken down into smaller, independently running components called microservices. Because microservices are decoupled from each other, they can be developed, deployed, updated, and scaled individually. This enables you to change components quickly and as often as necessary to keep up with today’s rapidly changing business requirements.
+Years ago, most software applications were big **monoliths**, running either as a single process or as a small number of processes spread across a handful of servers. 
 
-But with bigger numbers of deployable components and increasingly larger datacenters, it becomes increasingly difficult to configure manage, and keep the whole system running smoothly. It’s much harder to figure out where to put each of those components to achieve high resource utilization and thereby keep the hardware costs down. Doing all this manually is hard work. We need automation, which includes automatic scheduling of those components to our servers, automatic configuration, supervision, and failure-handling. This is where **Kubernetes** comes in.
+Today, these big monolithic legacy applications are slowly being broken down into smaller, independently running components called **microservices**. 
 
-Kubernetes enables developers to deploy their applications themselves and as often as they want, without requiring any assistance from the operations (ops) team. But Kubernetes doesn’t benefit only developers. It also helps the ops team by automatically monitoring and rescheduling those apps in the event of a hardware failure. The focus for system administrators (sysadmins) shifts from supervising individual apps to mostly supervising and managing Kubernetes and the rest of the infrastructure, while Kubernetes itself takes care of the apps.
+Because microservices are **decoupled** from each other, they can be developed, deployed, updated, and scaled individually. This enables you to change components quickly and as often as necessary to keep up with today’s rapidly changing business requirements.
+
+But with bigger numbers of deployable components and increasingly larger datacenters, it becomes increasingly difficult to configure, manage, and keep the whole system running smoothly. 
+
+It’s much harder to figure out where to put each of those components to achieve high resource utilization and thereby keep the hardware costs down. Doing all this manually is hard work. 
+
+We need: 
+
+- automation (including automatic scheduling of those components to our servers);
+- automatic configuration;
+- supervision; and 
+- failure-handling. 
+
+This is where **Kubernetes** comes in.
+
+> Kubernetes enables developers to deploy their applications themselves and as often as they want, without requiring any assistance from the operations (ops) team. 
+
+But Kubernetes doesn’t benefit only developers. It also helps the ops team by automatically monitoring and rescheduling those apps in the event of a hardware failure. 
+
+The focus for system administrators (sysadmins) shifts from supervising individual apps to mostly supervising and managing Kubernetes and the rest of the infrastructure, while Kubernetes itself takes care of the apps.
 
 #### Splitting apps into microservice
 
