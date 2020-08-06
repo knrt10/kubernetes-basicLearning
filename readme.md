@@ -183,7 +183,7 @@ This command lists all the images.
 
 `docker run --name kubia-container -p 8080:8080 -d kubia`
 
-This tells Docker to run a new container called **kubia-container** from the kubia image. The container will be detached from the console (-d flag), which means it will run in the background. Port 8080 on the local machine will be mapped to port 8080 inside the container (-p 8080:8080 option), so you can access the app through [localhost](http://localhost:8080).
+This tells Docker to run a new container called **kubia-container** from the kubia image. The container will be detached from the console (`-d` flag), which means it will run in the background. `Port 8080` on the local machine will be mapped to `Port 8080` inside the container (`-p 8080:8080` option), so you can access the app through [localhost](http://localhost:8080).
 
 #### Accessing your application
 
