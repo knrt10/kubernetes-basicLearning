@@ -12,10 +12,10 @@ This is just a simple demonstration to get a basic understanding of how Kubernet
 
 - [Requirements](#requirements)
 - **Docker**
-  - [What is docker?](#what-is-docker)
+  - [What is Docker?](#what-is-docker)
   - [Creating a web server](#creating-a-web-server)
-  - [Building docker image](#building-docker-image)
-  - [Getting docker images](#getting-docker-images)
+  - [Building Docker image](#building-docker-image)
+  - [Getting Docker images](#getting-docker-images)
   - [Running the container image](#running-the-container-image)
   - [Accessing your application](#accessing-your-application)
   - [Listing all your running containers](#listing-all-your-running-containers)
@@ -23,7 +23,7 @@ This is just a simple demonstration to get a basic understanding of how Kubernet
     - [Exploring container from within](#exploring-container-from-within)
   - [Stopping and removing a container](#stopping-and-removing-a-container)
   - [Pushing the image to an image registry](#pushing-the-image-to-an-image-registry)
-    - [Pushing image to docker hub](#pushing-image-to-docker-hub)
+    - [Pushing image to Docker hub](#pushing-image-to-docker-hub)
 -  **Kubernetes**
     - [What is Kubernetes](#what-is-kubernetes)
         - [Splitting apps into microservice](#splitting-apps-into-microservice)
@@ -108,13 +108,14 @@ This is just a simple demonstration to get a basic understanding of how Kubernet
 
 ## Requirements
 
-- You need to have [docker](https://www.docker.com/) installed for your OS
-- [minikube](https://github.com/kubernetes/minikube) installed for running locally
+You need to:
+-  have [Docker](https://www.docker.com/) installed for your OS;
+- [minikube](https://github.com/kubernetes/minikube) installed for running locally; and
 - [kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl/) installed.
 
 ## Simple concepts before we start
 
-#### What is docker
+#### What is Docker
 
 Docker is a platform for packaging, distribution and running applications. It allows you to package your application together with its whole environment. This can be either a few libraries that the app requires or even all the files that are usually available on the filesystem of an installed operating system. Docker makes it possible to transfer this package to a central repository from which it can then be transferred to any computer running Docker and executed there
 
