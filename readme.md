@@ -2,9 +2,9 @@
   <img src="https://user-images.githubusercontent.com/24803604/67205502-87c43800-f42d-11e9-9941-2a27d5dea0fe.png" />
 </p>
 
-This is just a simple demonstration to get a basic understanding of how kubernetes works while working step by step. I learnt kubernetes like this and made this repo to solve some problems that I faced during my learning experience so that it might help other beginners. We won't be going into depth about docker :blush: but will see sufficient content to get you basic understanding to learn and work with kubernetes. :v: Hope you enjoy learning. If you like it please give it a :star2:. 
+This is just a simple demonstration to get a basic understanding of how Kubernetes works while working step by step. I learnt Kubernetes like this and made this repo to solve some problems that I faced during my learning experience so that it might help other beginners. We won't be going into depth about Docker :blush: but will see sufficient content to get you a basic understanding to learn and work with Kubernetes. :v: Hope you enjoy learning. If you like it please give it a :star2:. 
 
-**Important :-** By seeing size of readme you might have second thoughts but to be honest if you work from start you won't experience any problem and learn along the way. 
+**Important :-** By seeing size of the readme, you might have second thoughts. But to be honest, if you work from start to finish, you won't experience any problem and learn along the way. 
 
 [![Say Thanks!](https://img.shields.io/badge/Say%20Thanks-!-1EAEDB.svg)](https://saythanks.io/to/tripathi.kautilya@gmail.com)
 
@@ -12,10 +12,10 @@ This is just a simple demonstration to get a basic understanding of how kubernet
 
 - [Requirements](#requirements)
 - **Docker**
-  - [What is docker?](#what-is-docker)
+  - [What is Docker?](#what-is-docker)
   - [Creating a web server](#creating-a-web-server)
-  - [Building docker image](#building-docker-image)
-  - [Getting docker images](#getting-docker-images)
+  - [Building Docker Image](#building-docker-image)
+  - [Getting Docker images](#getting-docker-images)
   - [Running the container image](#running-the-container-image)
   - [Accessing your application](#accessing-your-application)
   - [Listing all your running containers](#listing-all-your-running-containers)
@@ -23,7 +23,7 @@ This is just a simple demonstration to get a basic understanding of how kubernet
     - [Exploring container from within](#exploring-container-from-within)
   - [Stopping and removing a container](#stopping-and-removing-a-container)
   - [Pushing the image to an image registry](#pushing-the-image-to-an-image-registry)
-    - [Pushing image to docker hub](#pushing-image-to-docker-hub)
+    - [Pushing image to Docker hub](#pushing-image-to-docker-hub)
 -  **Kubernetes**
     - [What is Kubernetes](#what-is-kubernetes)
         - [Splitting apps into microservice](#splitting-apps-into-microservice)
@@ -108,26 +108,27 @@ This is just a simple demonstration to get a basic understanding of how kubernet
 
 ## Requirements
 
-- You need to have [docker](https://www.docker.com/) installed for your OS
-- [minikube](https://github.com/kubernetes/minikube) installed for running locally
+You need to:
+-  have [Docker](https://www.docker.com/) installed for your OS;
+- [minikube](https://github.com/kubernetes/minikube) installed for running locally; and
 - [kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl/) installed.
 
 ## Simple concepts before we start
 
-#### What is docker
+#### What is Docker
 
-Docker is a platform for packaging, distribution and running applications. It allows you to package your application together with its whole environment. This can be either a few libraries that the app requires or even all the files that are usually available on the filesystem of an installed operating system. Docker makes it possible to transfer this package to a central repository from which it can then be transferred to any computer running Docker and executed there
+Docker is a platform for packaging, distribution and running applications. It allows you to package your application together with its whole environment. This can be either a few libraries that the app requires or even all the files that are usually available on the filesystem of an installed operating system. Docker makes it possible to transfer this package to a central repository from which it can then be transferred to any computer running Docker and executed there.
 
 Three main concepts in Docker comprise this scenario:
 - **Images** :— A Docker based container image is something you package your application and its environment. It contains the filesystem that will be available to the application and other metadata, such as the path to the executable that should be executed when the image is run.
-- **Registries** :- A Docker Registry is a repository that stores your Docker images and facilitates easy sharing of those images between different people and computers. When you build your image, you can either run it on the computer you’ve built it on, or you can push (upload) the image to a registry and then pull (download) it on another computer and run it there. Certain registries are public, allowing anyone to pull images from it, while others are private, only accessible to certain people or machines.
+- **Registries** :- A Docker Registry is a repository that stores your Docker images and facilitates easy sharing of those images between different users and computers. When you build your image, you can either run it on the computer you’ve built it on, or you can push (upload) the image to a registry and then pull (download) it on another computer and run it there. Certain registries are public, allowing anyone to pull images from it, while others are private, only accessible to certain people or machines.
 - **Containers** :- A Docker-based container is a regular Linux container created from a Docker-based container image. A running container is a process running on the host running Docker, but it’s completely isolated from both the host and all other processes running on it. The process is also resource-constrained, meaning it can only access and use the number of resources (CPU, RAM, and so on) that are allocated to it.
 
 ## Learning while working
 
 #### Creating a web server
 
-You first need to create a container image. We will use docker for that. We are creating a simple web server to see how kubernetes works.
+You first need to create a container image. We will use Docker for that. We are creating a simple web server to see how Kubernetes works.
 
 - create a file `app.js` and copy this code into it
 
@@ -145,9 +146,9 @@ www.listen(8080);
 
 ```
 
-Now we will create a docker file that will run on a cluster when we create a docker image. 
+Now we will create a Docker file that will run on a cluster when we create a Docker image. 
 
-- create a file named `Dockerfile` and copy this code into it.
+- Create a file named `Dockerfile` and copy this code into it.
 
 ```Dockerfile
 FROM node:8 
@@ -160,15 +161,17 @@ ENTRYPOINT [ "node", "app.js" ]
 
 ```
 
-#### Building docker image
+#### Building Docker Image
 
-Make sure your **docker server is up and running**. Now we will create a docker image in our local machine. Open your terminal in the current project's folder and run
+Make sure your **Docker server is up and running**. Now we will create a Docker image in our local machine. Open your terminal in the current project's folder and run
 
 `docker build -t kubia .`
 
-You’re telling Docker to build an image called **kubia** based on the contents of the current directory (note the dot at the end of the build command). Docker will look for the Dockerfile in the directory and build the image based on the instructions in the file.
+You’re telling Docker to build an image called **kubia** based on the contents of the current directory (note the dot `.` at the end of the build command). Docker will look for the Dockerfile in the directory and build the image based on the instructions in the file.
 
-Now check your docker image created by running
+Now check your docker image created by running:
+
+`docker images`
 
 #### Getting docker images
 
@@ -180,28 +183,28 @@ This command lists all the images.
 
 `docker run --name kubia-container -p 8080:8080 -d kubia`
 
-This tells Docker to run a new container called **kubia-container** from the kubia image. The container will be detached from the console (-d flag), which means it will run in the background. Port 8080 on the local machine will be mapped to port 8080 inside the container (-p 8080:8080 option), so you can access the app through [localhost](http://localhost:8080).
+This tells Docker to run a new container called **kubia-container** from the kubia image. The container will be detached from the console (`-d` flag), which means it will run in the background. `Port 8080` on the local machine will be mapped to `Port 8080` inside the container (`-p 8080:8080` option), so you can access the app through [localhost](http://localhost:8080).
 
 #### Accessing your application
 
-Run in your terminal
+Run in your terminal:
 
 `curl localhost:8080`
 > You’ve hit 44d76963e8e1
 
 #### Listing all your running containers
 
-You can list all your running containers by this command.
+You can list all your running containers with this command.
 
 `docker ps`
 
 The `docker ps` command only shows the most basic information about the containers.
 
-Also to get additional information about a container run this command
+To get additional information about a container, run this command.
 
 `docker inspect kubia-container`
 
-You can see all the container by
+You can see all the containers by running:
 
 `docker ps -a`
 
@@ -211,10 +214,12 @@ The Node.js image on which you’ve based your image contains the bash shell, so
 
 `docker exec -it kubia-container bash`
 
-This will run bash inside the existing **kubia-container** container. The **bash** process will have the same Linux namespaces as the main container process. This allows you to explore the container from within and see how Node.js and your app see the system when running inside the container. The **-it** option is shorthand for two options:
+This will run bash inside the existing **kubia-container** container. The **bash** process will have the same Linux namespaces as the main container process. This allows you to explore the container from within and see how Node.js and your app see the system when running inside the container. 
 
-- -i, which makes sure STDIN is kept open. You need this for entering commands into the shell.
-- -t, which allocates a pseudo terminal (TTY).
+The **`-it`** option is shorthand for two options:
+
+- `-i`, which makes sure STDIN is kept open. You need this for entering commands into the shell.
+- `-t`, which allocates a pseudo terminal (TTY).
 
 #### Exploring container from within
 
@@ -238,13 +243,15 @@ root@c61b9b509f9a:/# ls
 app.js  bin  boot  dev  etc  home  lib  lib64  media  mnt  opt  package-lock.json  proc  root  run  sbin  srv  sys  tmp  usr  var
 ```
 
-It contains the **app.js** file and other system directories that are part of the node:8 base image you’re using. To exit the container, you exit the shell by running the **exit** command and you’ll be returned to your host machine (like logging out of an ssh session, for example).
+It contains the **app.js** file and other system directories that are part of the `node:8` base image you’re using. 
+
+To exit the container, you exit the shell by running the **exit** command and you’ll be returned to your host machine (like logging out of an ssh session, for example).
 
 #### Stopping and removing a container
 
 `docker stop kubia-container`
 
-This will stop the main process running in the container and consequently stop the container because no other processes are running inside the container. The container itself still exists and you can see it with **docker ps -a**. The -a option prints out all the containers, those running and those that have been stopped. To truly remove a container, you need to remove it with the **docker rm** command:
+This will stop the main process running in the container and consequently stop the container because no other processes are running inside the container. The container itself still exists and you can see it with **docker ps -a**. The `-a` option prints out all the containers, those running and those that have been stopped. To truly remove a container, you need to remove it with the **docker rm** command:
 
 `docker rm kubia-container`
 
@@ -252,66 +259,92 @@ This deletes the container. All its contents are removed and it can’t be start
 
 ### Pushing the image to an image registry
 
-The image you’ve built has so far only been available on your local machine. To allow you to run it on any other machine, you need to push the image to an external image registry. For the sake of simplicity, you won’t set up a private image registry and will instead push the image to [Docker Hub](http://hub.docker.com)
+The image you’ve built has so far only been available on your local machine. To allow you to run it on any other machine, you need to push the image to an external image registry. For the sake of simplicity, you won’t set up a private image registry and will instead push the image to [Docker Hub](http://hub.docker.com).
 
-Before you do that, you need to re-tag your image according to Docker Hub’s rules. Docker Hub will allow you to push an image if the image’s repository name starts with your Docker Hub ID. You create your Docker Hub ID by registering at [hub-docker](http://hub.docker.com). I’ll use my own ID (knrt10) in the following examples. Please change every occurrence with your own ID.
+Before you do that, you need to re-tag your image according to Docker Hub’s rules. Docker Hub will allow you to push an image if the image’s repository name starts with your Docker Hub ID. 
 
-Once you know your ID, you’re ready to rename your image, currently tagged as kubia, to knrt10/kubia (replace knrt10 with your own Docker Hub ID):
+You create your Docker Hub ID by registering at [hub-docker](http://hub.docker.com). I’ll use my own ID (`knrt10`) in the following examples. Please change every occurrence with your own ID.
+
+Once you know your ID, you’re ready to rename your image, currently tagged as `kubia`, to `knrt10/kubia` (replace knrt10 with your own Docker Hub ID):
 
 `docker tag kubia knrt10/kubia`
 
-This doesn’t rename the tag; it creates an additional tag for the same image. You can confirm this by listing the images stored on your system with the docker images command, as shown in the following listing.
+This doesn’t rename the tag; it creates an additional tag for the same image. You can confirm this by listing the images stored on your system with the Docker images command, as shown in the following listing.
 
 `docker images | head`
 
-As you can see, both kubia and knrt10/kubia point to the same image ID, so they’re in fact one single image with two tags.
+As you can see, both `kubia` and `knrt10/kubia` point to the same image ID, so they’re in fact one single image with two tags.
 
 #### Pushing image to docker hub
 
-Before you can push the image to Docker Hub, you need to log in under your user ID with the **docker login** command. Once you’re logged in, you can finally push the yourid/kubia image to Docker Hub like this:
+Before you can push the image to Docker Hub, you need to log in under your user ID with the **docker login** command. Once you’re logged in, you can finally push the `yourid/kubia` image to Docker Hub like this:
 
 `docker push knrt10/kubia`     
 
 ### What is Kubernetes
 
-Years ago, most software applications were big monoliths, running either as a single process or as a small number of processes spread across a handful of servers. Today, these big monolithic legacy applications are slowly being broken down into smaller, independently running components called microservices. Because microservices are decoupled from each other, they can be developed, deployed, updated, and scaled individually. This enables you to change components quickly and as often as necessary to keep up with today’s rapidly changing business requirements.
+Years ago, most software applications were big `monoliths`, running either as a single process or as a small number of processes spread across a handful of servers. 
 
-But with bigger numbers of deployable components and increasingly larger datacenters, it becomes increasingly difficult to configure manage, and keep the whole system running smoothly. It’s much harder to figure out where to put each of those components to achieve high resource utilization and thereby keep the hardware costs down. Doing all this manually is hard work. We need automation, which includes automatic scheduling of those components to our servers, automatic configuration, supervision, and failure-handling. This is where **Kubernetes** comes in.
+Today, these big monolithic legacy applications are slowly being broken down into smaller, independently running components called `microservices`. 
 
-Kubernetes enables developers to deploy their applications themselves and as often as they want, without requiring any assistance from the operations (ops) team. But Kubernetes doesn’t benefit only developers. It also helps the ops team by automatically monitoring and rescheduling those apps in the event of a hardware failure. The focus for system administrators (sysadmins) shifts from supervising individual apps to mostly supervising and managing Kubernetes and the rest of the infrastructure, while Kubernetes itself takes care of the apps.
+Because microservices are `decoupled` from each other, they can be developed, deployed, updated, and scaled individually. This enables you to change components quickly and as often as necessary to keep up with today’s rapidly changing business requirements.
+
+But with bigger numbers of deployable components and increasingly larger datacenters, it becomes increasingly difficult to configure, manage, and keep the whole system running smoothly. 
+
+It’s much harder to figure out where to put each of those components to achieve high resource utilization and thereby keep the hardware costs down. Doing all this manually is hard work. 
+
+We need: 
+
+- automation (including automatic scheduling of those components to our servers);
+- automatic configuration;
+- supervision; and 
+- failure-handling. 
+
+This is where **Kubernetes** comes in.
+
+> <em>Kubernetes enables developers to deploy their applications themselves and as often as they want, without requiring any assistance from the operations (ops) team.</em>
+
+But Kubernetes doesn’t solely benefit developers. It also helps the ops team by automatically monitoring and rescheduling those apps in the event of a hardware failure. 
+
+The focus for system administrators (sysadmins) shifts from supervising individual apps to mostly supervising and managing Kubernetes and the rest of the infrastructure, while Kubernetes itself takes care of the apps.
 
 #### Splitting apps into microservice
 
-Each microservice runs as an independent process and communicates with other microservices through simple, well-defined interfaces (APIs). Refer to below image
+Each microservice runs as an independent process and communicates with other microservices through simple, well-defined interfaces (APIs). Refer to the image below:
 
 ![Microservice](https://user-images.githubusercontent.com/24803604/68068406-bf4bb200-fd54-11e9-8565-6214d30616bb.png)
 
-> Image taken from other source
+> <em>- Image taken from other source.</em>
 
 
-Microservices communicate through synchronous protocols such as HTTP, over which they usually expose RESTful (REpresentational State Transfer) APIs, or through asynchronous protocols such as AMQP (Advanced Message Queueing Protocol). These protocols are simple, well understood by most developers, and not tied to any specific programming language. Each microservice can be written in the language that’s most appropriate for implementing that specific microservice.
+Microservices communicate through synchronous protocols such as HTTP, over which they usually expose RESTful (REpresentational State Transfer) APIs, or through asynchronous protocols such as AMQP (Advanced Message Queueing Protocol). 
+
+These protocols are simple, well understood by most developers, and not tied to any specific programming language. Each microservice can be written in the language that’s most appropriate for implementing that specific microservice.
 
 Because each microservice is a standalone process with a relatively static external API, it’s possible to develop and deploy each microservice separately. A change to one of them doesn’t require changes or redeployment of any other service, provided that the API doesn’t change or changes only in a backward-compatible way.
 
 #### Scaling Microservices
 
-Scaling microservices, unlike monolithic systems, where you need to scale the system as a whole, is done on a per-service basis, which means you have the option of scaling only those services that require more resources, while leaving others at their original scale. Refer to image below
+Scaling microservices, unlike monolithic systems, where you need to scale the system as a whole, is done on a per-service basis, which means you have the option of scaling only those services that require more resources, while leaving others at their original scale. Refer to the image below:
 
 ![Scaling](https://user-images.githubusercontent.com/24803604/68068433-03d74d80-fd55-11e9-87fe-5fad885168d1.png)
 
-> Image taken from other source
+> <em>- Image taken from other source.</em>
 
-When a monolithic application can’t be scaled out because one of its parts is unscalable, splitting the app into microservices allows you to horizontally scale the parts that allow scaling out, and scale the parts that don’t, vertically instead of horizontally.
+When a monolithic application can’t be scaled out because one of its parts is unscalable, splitting the app into microservices allows you to horizontally scale the parts that allow scaling out. The parts that don't scale hoirzontally can be scaled vertically instead.
+
 
 #### Deploying Microservices
 
-As always, microservices also have drawbacks. When your system consists of only a small number of deployable components, managing those components is easy. It’s trivial to decide where to deploy each component, because there aren’t that many choices. When the number of those components increases, deployment-related decisions become increasingly difficult because not only does the number of deployment combinations increase, but the number of inter-dependencies between the components increases by an even greater factor.
+As always, microservices also have drawbacks. When your system consists of only a small number of deployable components, managing those components is easy. It’s trivial to decide where to deploy each component, because there aren’t that many choices. 
+
+When the number of those components increases, deployment-related decisions become increasingly difficult because not only does the number of deployment combinations increase, but the number of inter-dependencies between the components increases by an even greater factor.
 
 Microservices also bring other problems, such as making it hard to debug and trace execution calls, because they span multiple processes and machines. Luckily, these problems are now being addressed with distributed tracing systems such as Zipkin.
 
 ![Drawback](https://user-images.githubusercontent.com/24803604/68068466-62043080-fd55-11e9-867f-971dc4df862f.png)
 
-> Multiple applications running on the same host may have conflicting dependencies.
+> <em>Multiple applications running on the same host may have conflicting dependencies.</em>
 
 #### Working with Kubernetes
 
@@ -319,7 +352,9 @@ Now that you have your app packaged inside a container image and made available 
 
 #### Setting up a Kubernetes cluster
 
-Setting up a full-fledged, multi-node Kubernetes cluster isn’t a simple task, especially if you’re not well-versed in Linux and networking administration. A proper Kubernetes install spans multiple physical or virtual machines and requires the networking to be set up properly so that all the containers running inside the Kubernetes cluster can connect to each other through the same flat networking space.
+Setting up a full-fledged, multi-node Kubernetes cluster isn’t a simple task, especially if you’re not well-versed in Linux and networking administration. 
+
+A proper Kubernetes install spans multiple physical or virtual machines and requires the networking to be set up properly so that all the containers running inside the Kubernetes cluster can connect to each other through the same flat networking space.
 
 ### Running a local single node Kubernetes cluster with Minikube
 
@@ -327,7 +362,7 @@ The simplest and quickest path to a fully functioning Kubernetes cluster is by u
 
 #### Starting a Kubernetes cluster with minikube
 
-Once you have Minikube installed locally, you can immediately start up the Kubernetes cluster with the command in the following listing.
+Once you have Minikube installed locally, you can immediately start up the Kubernetes cluster with the following command:
 
 `minikube start`
 ```bash
@@ -341,7 +376,7 @@ Kubectl is now configured to use the cluster.
 Starting the cluster takes more than a minute, so don’t interrupt the command before
 it completes.
 
-#### Checking to see if the cluster is up and kubernetes can talk to it
+#### Checking to see if the cluster is up and Kubernetes can talk to it
 
 To interact with Kubernetes, you also need the **kubectl** CLI client. [Installing](https://kubernetes.io/docs/tasks/tools/install-kubectl/) it is easy.
 
@@ -364,7 +399,7 @@ The simplest way to deploy your app is to use the **kubectl run** command, which
 
 `kubectl run kubia --image=knrt10/kubia --port=8080 --generator=run/v1`
 
-The --image=knrt10/kubia part obviously specifies the container image you want to run, and the --port=8080 option tells Kubernetes that your app is listening on port 8080. The last flag (--generator) does require an explanation, though. Usually, you won’t use it, but you’re using it here so Kubernetes creates a **ReplicationController** instead of a Deployment.
+The `--image=knrt10/kubia` part obviously specifies the container image you want to run, and the `--port=8080` option tells Kubernetes that your app is listening on port 8080. The last flag (`--generator`) does require an explanation, though. Usually, you won’t use it, but you’re using it here so Kubernetes creates a **ReplicationController** instead of a Deployment.
 
 #### Listing Pods
 
@@ -380,7 +415,9 @@ kubia-5k788   1/1       Running   1          7d
 
 ### Accessing your web application
 
-With your pod running, how do you access it? Each pod gets its own IP address, but this address is internal to the cluster and isn’t accessible from outside of it. To make the pod accessible from the outside, you’ll expose it through a Service object. You’ll create a special service of type LoadBalancer because if you create a regular service (a ClusterIP service), as the pod, it would also only be accessible from inside the cluster. By creating a LoadBalancer-type service, an external load balancer will be created and you can connect to the pod through the load balancer’s public IP.
+With your pod running, how do you access it? Each pod gets its own IP address, but this address is internal to the cluster and isn’t accessible from outside of it. To make the pod accessible from the outside, you’ll expose it through a Service object. 
+
+You’ll create a special service of type LoadBalancer because if you create a regular service (a ClusterIP service), as the pod, it would also only be accessible from inside the cluster. By creating a LoadBalancer-type service, an external load balancer will be created and you can connect to the pod through the load balancer’s public IP.
 
 #### Creating a service object
 
