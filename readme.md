@@ -376,7 +376,7 @@ Kubectl is now configured to use the cluster.
 Starting the cluster takes more than a minute, so don’t interrupt the command before
 it completes.
 
-#### Checking to see if the cluster is up and kubernetes can talk to it
+#### Checking to see if the cluster is up and Kubernetes can talk to it
 
 To interact with Kubernetes, you also need the **kubectl** CLI client. [Installing](https://kubernetes.io/docs/tasks/tools/install-kubectl/) it is easy.
 
@@ -399,7 +399,7 @@ The simplest way to deploy your app is to use the **kubectl run** command, which
 
 `kubectl run kubia --image=knrt10/kubia --port=8080 --generator=run/v1`
 
-The --image=knrt10/kubia part obviously specifies the container image you want to run, and the --port=8080 option tells Kubernetes that your app is listening on port 8080. The last flag (--generator) does require an explanation, though. Usually, you won’t use it, but you’re using it here so Kubernetes creates a **ReplicationController** instead of a Deployment.
+The `--image=knrt10/kubia` part obviously specifies the container image you want to run, and the `--port=8080` option tells Kubernetes that your app is listening on port 8080. The last flag (`--generator`) does require an explanation, though. Usually, you won’t use it, but you’re using it here so Kubernetes creates a **ReplicationController** instead of a Deployment.
 
 #### Listing Pods
 
@@ -415,7 +415,9 @@ kubia-5k788   1/1       Running   1          7d
 
 ### Accessing your web application
 
-With your pod running, how do you access it? Each pod gets its own IP address, but this address is internal to the cluster and isn’t accessible from outside of it. To make the pod accessible from the outside, you’ll expose it through a Service object. You’ll create a special service of type LoadBalancer because if you create a regular service (a ClusterIP service), as the pod, it would also only be accessible from inside the cluster. By creating a LoadBalancer-type service, an external load balancer will be created and you can connect to the pod through the load balancer’s public IP.
+With your pod running, how do you access it? Each pod gets its own IP address, but this address is internal to the cluster and isn’t accessible from outside of it. To make the pod accessible from the outside, you’ll expose it through a Service object. 
+
+You’ll create a special service of type LoadBalancer because if you create a regular service (a ClusterIP service), as the pod, it would also only be accessible from inside the cluster. By creating a LoadBalancer-type service, an external load balancer will be created and you can connect to the pod through the load balancer’s public IP.
 
 #### Creating a service object
 
