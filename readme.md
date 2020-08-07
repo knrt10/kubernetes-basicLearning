@@ -283,11 +283,11 @@ Before you can push the image to Docker Hub, you need to log in under your user 
 
 ### What is Kubernetes
 
-Years ago, most software applications were big **monoliths**, running either as a single process or as a small number of processes spread across a handful of servers. 
+Years ago, most software applications were big `monoliths`, running either as a single process or as a small number of processes spread across a handful of servers. 
 
-Today, these big monolithic legacy applications are slowly being broken down into smaller, independently running components called **microservices**. 
+Today, these big monolithic legacy applications are slowly being broken down into smaller, independently running components called `microservices`. 
 
-Because microservices are **decoupled** from each other, they can be developed, deployed, updated, and scaled individually. This enables you to change components quickly and as often as necessary to keep up with today’s rapidly changing business requirements.
+Because microservices are `decoupled` from each other, they can be developed, deployed, updated, and scaled individually. This enables you to change components quickly and as often as necessary to keep up with today’s rapidly changing business requirements.
 
 But with bigger numbers of deployable components and increasingly larger datacenters, it becomes increasingly difficult to configure, manage, and keep the whole system running smoothly. 
 
@@ -302,44 +302,49 @@ We need:
 
 This is where **Kubernetes** comes in.
 
-> Kubernetes enables developers to deploy their applications themselves and as often as they want, without requiring any assistance from the operations (ops) team. 
+> <em>Kubernetes enables developers to deploy their applications themselves and as often as they want, without requiring any assistance from the operations (ops) team.</em>
 
-But Kubernetes doesn’t benefit only developers. It also helps the ops team by automatically monitoring and rescheduling those apps in the event of a hardware failure. 
+But Kubernetes doesn’t solely benefit developers. It also helps the ops team by automatically monitoring and rescheduling those apps in the event of a hardware failure. 
 
 The focus for system administrators (sysadmins) shifts from supervising individual apps to mostly supervising and managing Kubernetes and the rest of the infrastructure, while Kubernetes itself takes care of the apps.
 
 #### Splitting apps into microservice
 
-Each microservice runs as an independent process and communicates with other microservices through simple, well-defined interfaces (APIs). Refer to below image
+Each microservice runs as an independent process and communicates with other microservices through simple, well-defined interfaces (APIs). Refer to the image below:
 
 ![Microservice](https://user-images.githubusercontent.com/24803604/68068406-bf4bb200-fd54-11e9-8565-6214d30616bb.png)
 
-> Image taken from other source
+> <em>- Image taken from other source.</em>
 
 
-Microservices communicate through synchronous protocols such as HTTP, over which they usually expose RESTful (REpresentational State Transfer) APIs, or through asynchronous protocols such as AMQP (Advanced Message Queueing Protocol). These protocols are simple, well understood by most developers, and not tied to any specific programming language. Each microservice can be written in the language that’s most appropriate for implementing that specific microservice.
+Microservices communicate through synchronous protocols such as HTTP, over which they usually expose RESTful (REpresentational State Transfer) APIs, or through asynchronous protocols such as AMQP (Advanced Message Queueing Protocol). 
+
+These protocols are simple, well understood by most developers, and not tied to any specific programming language. Each microservice can be written in the language that’s most appropriate for implementing that specific microservice.
 
 Because each microservice is a standalone process with a relatively static external API, it’s possible to develop and deploy each microservice separately. A change to one of them doesn’t require changes or redeployment of any other service, provided that the API doesn’t change or changes only in a backward-compatible way.
 
 #### Scaling Microservices
 
-Scaling microservices, unlike monolithic systems, where you need to scale the system as a whole, is done on a per-service basis, which means you have the option of scaling only those services that require more resources, while leaving others at their original scale. Refer to image below
+Scaling microservices, unlike monolithic systems, where you need to scale the system as a whole, is done on a per-service basis, which means you have the option of scaling only those services that require more resources, while leaving others at their original scale. Refer to the image below:
 
 ![Scaling](https://user-images.githubusercontent.com/24803604/68068433-03d74d80-fd55-11e9-87fe-5fad885168d1.png)
 
-> Image taken from other source
+> <em>- Image taken from other source.</em>
 
-When a monolithic application can’t be scaled out because one of its parts is unscalable, splitting the app into microservices allows you to horizontally scale the parts that allow scaling out, and scale the parts that don’t, vertically instead of horizontally.
+When a monolithic application can’t be scaled out because one of its parts is unscalable, splitting the app into microservices allows you to horizontally scale the parts that allow scaling out. The parts that don't scale hoirzontally can be scaled vertically instead.
+
 
 #### Deploying Microservices
 
-As always, microservices also have drawbacks. When your system consists of only a small number of deployable components, managing those components is easy. It’s trivial to decide where to deploy each component, because there aren’t that many choices. When the number of those components increases, deployment-related decisions become increasingly difficult because not only does the number of deployment combinations increase, but the number of inter-dependencies between the components increases by an even greater factor.
+As always, microservices also have drawbacks. When your system consists of only a small number of deployable components, managing those components is easy. It’s trivial to decide where to deploy each component, because there aren’t that many choices. 
+
+When the number of those components increases, deployment-related decisions become increasingly difficult because not only does the number of deployment combinations increase, but the number of inter-dependencies between the components increases by an even greater factor.
 
 Microservices also bring other problems, such as making it hard to debug and trace execution calls, because they span multiple processes and machines. Luckily, these problems are now being addressed with distributed tracing systems such as Zipkin.
 
 ![Drawback](https://user-images.githubusercontent.com/24803604/68068466-62043080-fd55-11e9-867f-971dc4df862f.png)
 
-> Multiple applications running on the same host may have conflicting dependencies.
+> <em>Multiple applications running on the same host may have conflicting dependencies.</em>
 
 #### Working with Kubernetes
 
@@ -347,7 +352,9 @@ Now that you have your app packaged inside a container image and made available 
 
 #### Setting up a Kubernetes cluster
 
-Setting up a full-fledged, multi-node Kubernetes cluster isn’t a simple task, especially if you’re not well-versed in Linux and networking administration. A proper Kubernetes install spans multiple physical or virtual machines and requires the networking to be set up properly so that all the containers running inside the Kubernetes cluster can connect to each other through the same flat networking space.
+Setting up a full-fledged, multi-node Kubernetes cluster isn’t a simple task, especially if you’re not well-versed in Linux and networking administration. 
+
+A proper Kubernetes install spans multiple physical or virtual machines and requires the networking to be set up properly so that all the containers running inside the Kubernetes cluster can connect to each other through the same flat networking space.
 
 ### Running a local single node Kubernetes cluster with Minikube
 
@@ -355,7 +362,7 @@ The simplest and quickest path to a fully functioning Kubernetes cluster is by u
 
 #### Starting a Kubernetes cluster with minikube
 
-Once you have Minikube installed locally, you can immediately start up the Kubernetes cluster with the command in the following listing.
+Once you have Minikube installed locally, you can immediately start up the Kubernetes cluster with the following command:
 
 `minikube start`
 ```bash
