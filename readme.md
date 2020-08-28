@@ -331,7 +331,7 @@ Scaling microservices, unlike monolithic systems, where you need to scale the sy
 
 > <em>- Image taken from other source.</em>
 
-When a monolithic application can’t be scaled out because one of its parts is unscalable, splitting the app into microservices allows you to horizontally scale the parts that allow scaling out. The parts that don't scale hoirzontally can be scaled vertically instead.
+When a monolithic application can’t be scaled out because one of its parts is unscalable, splitting the app into microservices allows you to horizontally scale the parts that allow scaling out. The parts that don't scale horizontally can be scaled vertically instead.
 
 
 #### Deploying Microservices
