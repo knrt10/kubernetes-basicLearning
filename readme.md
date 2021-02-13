@@ -395,11 +395,11 @@ This shows the cluster is up. It shows the URLs of the various Kubernetes compon
 
 #### Deploying your Node app
 
-The simplest way to deploy your app is to use the **kubectl run** command, which will create all the necessary components without having to deal with JSON or YAML.
+A simple way to deploy your app is to use the **kubectl create** command, which will create all the necessary components without having to deal with JSON or YAML.
 
-`kubectl run kubia --image=knrt10/kubia --port=8080 --generator=run/v1`
+`kubectl create deployment kubia --image=knrt10/kubia --port=8080`
 
-The `--image=knrt10/kubia` part obviously specifies the container image you want to run, and the `--port=8080` option tells Kubernetes that your app is listening on port 8080. The last flag (`--generator`) does require an explanation, though. Usually, you won’t use it, but you’re using it here so Kubernetes creates a **ReplicationController** instead of a Deployment.
+The `--image=knrt10/kubia` part obviously specifies the container image you want to run, and the `--port=8080` option tells Kubernetes that your app is listening on port 8080.
 
 #### Listing Pods
 
@@ -409,8 +409,8 @@ Because you can’t list individual containers since they’re not standalone Ku
 
 ```bash
 $ kubectl get pods
-NAME          READY     STATUS    RESTARTS   AGE
-kubia-5k788   1/1       Running   1          7d
+NAME                     READY   STATUS    RESTARTS   AGE
+kubia-57c4d74858-tflb8   1/1     Running   0          24s
 ```
 
 ### Accessing your web application
@@ -421,13 +421,12 @@ You’ll create a special service of type LoadBalancer because if you create a r
 
 #### Creating a service object
 
-To create the service, you’ll tell Kubernetes to expose the ReplicationController you created earlier:
+To create the service, you’ll tell Kubernetes to expose the Deployment you created earlier:
 
-`kubectl expose rc kubia --type=LoadBalancer --name kubia-http`
-> service "kubia-http" exposed
+`kubectl expose deploy kubia --type=LoadBalancer --name kubia-http`
+> service/kubia-http exposed
 
-
-**Important:** We’re using the abbreviation `rc` instead of `replicationcontroller`. Most resource types have an abbreviation like this so you don’t have to type the full name (for example, `po` for `pods`, `svc` for `services`, and so on).
+**Important:** We’re using the abbreviation `deploy` instead of `deployments`. Most resource types have an abbreviation like this so you don’t have to type the full name (for example, `po` for `pods`, `svc` for `services`, and so on).
 
 #### Listing Services
 
@@ -436,9 +435,9 @@ The expose command’s output mentions a service called `kubia-http`. Services a
 `kubectl get svc`
 
 ```bash
-NAME         TYPE           CLUSTER-IP    EXTERNAL-IP   PORT(S)          AGE
-kubernetes   ClusterIP      10.96.0.1     <none>        443/TCP          7d
-kubia-http   LoadBalancer   10.96.99.92   <pending>     8080:30126/TCP   7d
+NAME         TYPE           CLUSTER-IP     EXTERNAL-IP   PORT(S)          AGE
+kubernetes   ClusterIP      10.96.0.1      <none>        443/TCP          30h
+kubia-http   LoadBalancer   10.107.88.67   <pending>     8080:32718/TCP   81s
 ```
 
 **Important** :- Minikube doesn’t support LoadBalancer services, so the service will never get an external IP. But you can access the service anyway through its external port. So external IP will always be pending in that case. When using Minikube, you can get the IP and port through which you
@@ -448,36 +447,36 @@ can access the service by running
 
 ### Horizontally scaling the application
 
-You now have a running application, monitored and kept running by a Replication-Controller and exposed to the world through a service. Now let’s make additional magic happen.
+You now have a running application, monitored and kept running by a Deployment and exposed to the world through a service. Now let’s make additional magic happen.
 One of the main benefits of using Kubernetes is the simplicity with which you can scale your deployments. Let’s see how easy it is to scale up the number of pods. You’ll increase the number of running instances to three.
 
-Your pod is managed by a ReplicationController. Let’s see it with the kubectl get command:
+Your pod is managed by a Deployment. Let’s see it with the kubectl get command:
 
-`kubectl get rc`
+`kubectl get deploy`
 
 ```bash
-NAME      DESIRED   CURRENT   READY     AGE
-kubia     1         1         1         7d
+NAME    READY   UP-TO-DATE   AVAILABLE   AGE
+kubia   1/1     1            1           4m58s
 ```
 
 #### Increasing the desired Replica count
 
-To scale up the number of replicas of your pod, you need to change the desired replica count on the ReplicationController like this:
+To scale up the number of replicas of your pod, you need to change the desired replica count in the Deployment like this:
 
-`kubectl scale rc kubia --replicas=3`
-> replicationcontroller "kubia" scaled
+`kubectl scale deploy kubia --replicas=3`
+> deployment.apps/kubia scaled
 
 You’ve now told Kubernetes to make sure three instances of your pod are always running. Notice that you didn’t instruct Kubernetes what action to take. You didn’t tell it to add two more pods. You only set the new desired number of instances and let Kubernetes determine what actions it needs to take to achieve the requested state.
 
 #### Seeing the result of the Scale Out
 
-Back to your replica count increase. Let’s list the ReplicationControllers again to see the updated replica count:
+Back to your replica count increase. Let’s list the Deployments again to see the updated replica count:
 
-`kubectl get rc`
+`kubectl get deploy`
 
 ```bash
-NAME      DESIRED   CURRENT   READY     AGE
-kubia     3         3         3         7d
+NAME    READY   UP-TO-DATE   AVAILABLE   AGE
+kubia   3/3     3            3           6m43s
 ```
 
 Because the actual number of pods has already been increased to three (as evident from the CURRENT column), listing all the pods should now show three pods instead of one:
@@ -485,10 +484,10 @@ Because the actual number of pods has already been increased to three (as eviden
 `kubectl get pods`
 
 ```bash
-NAME          READY     STATUS    RESTARTS   AGE
-kubia-5k788   1/1       Running   1          7d
-kubia-7zxwj   1/1       Running   1          3d
-kubia-bsksp   1/1       Running   1          3d
+NAME                     READY   STATUS    RESTARTS   AGE
+kubia-57c4d74858-d284g   1/1     Running   0          94s
+kubia-57c4d74858-tflb8   1/1     Running   0          7m9s
+kubia-57c4d74858-wfgmb   1/1     Running   0          94s
 ```
 
 As you can see, three pods exist instead of one. Currently running, but if it is pending, it would be ready in a few moments, as soon as the container image is downloaded and the container is started.
@@ -506,10 +505,11 @@ But you can request additional columns to display using the **-o wide** option. 
 `kubectl get pods -o wide`
 
 ```bash
-NAME          READY     STATUS    RESTARTS   AGE       IP           NODE
-kubia-5k788   1/1       Running   1          7d        172.17.0.4   minikube
-kubia-7zxwj   1/1       Running   1          3d        172.17.0.5   minikube
-kubia-bsksp   1/1       Running   1          3d        172.17.0.6   minikube
+$ kubectl get pods -o wide
+NAME                     READY   STATUS    RESTARTS   AGE     IP           NODE       NOMINATED NODE   READINESS GATES
+kubia-57c4d74858-d284g   1/1     Running   0          2m53s   172.17.0.5   minikube   <none>           <none>
+kubia-57c4d74858-tflb8   1/1     Running   0          8m28s   172.17.0.3   minikube   <none>           <none>
+kubia-57c4d74858-wfgmb   1/1     Running   0          2m53s   172.17.0.4   minikube   <none>           <none>
 ```
 
 #### Accessing Dashboard when using Minikube
