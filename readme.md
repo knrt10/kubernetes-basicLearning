@@ -913,7 +913,7 @@ Suppose you want to keep your namespace but delete all the pods in it, so this i
 
 This time, instead of deleting the specific pod, tell Kubernetes to delete all pods in the current namespace by using the --all option
 
-`kubeclt delete po --all`
+`kubectl delete po --all`
 ```bash
 pod "kubia-pjxrs" deleted
 pod "kubia-xvfxp" deleted
