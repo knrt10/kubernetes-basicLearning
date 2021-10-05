@@ -1312,9 +1312,9 @@ When you delete a ReplicationController through kubectl delete, the pods are als
 
 This may be useful when you initially have a set of pods managed by a ReplicationController, and then decide to replace the ReplicationController with a `ReplicaSet`. You can do this without affecting the pods and keep them running without interruption while you replace the ReplicationController that manages them.
 
-When deleting a ReplicationController with kubectl delete, you can keep its pods running by passing the `--cascade=false` option to the command. Try that now:
+When deleting a ReplicationController with kubectl delete, you can keep its pods running by passing the `--cascade=orphan` option to the command. Try that now:
 
-`kubectl delete rc kubia --cascade=false`
+`kubectl delete rc kubia --cascade=orphan`
 
 You’ve deleted the ReplicationController so the pods are on their own. They are no longer managed. But you can always create a new ReplicationController with the proper label selector and make them managed again.
 
