@@ -1,11 +1,56 @@
 apiVersion: v1
-kind: Pod
+kind: ConfigMap
 metadata:
-  name: kubia-manual
+  name: index-html-configmap
+  namespace: default
+data:
+  index.html: |
+    <html>
+    <h1>Welcome</h1>
+    </br>
+    <h1>Hi! I am Deployed in Mnikube </h1>
+    </html
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  namespace: default
 spec:
-  containers:
-  - image: knrt10/kubia
-    name: kubia
-    ports:
-    - containerPort: 8080
-      protocol: TCP
+  selector:
+    matchLabels:
+      app: nginx
+  replicas: 2 
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:latest
+        ports:
+        - containerPort: 80
+        volumeMounts:
+            - name: nginx-index-file
+              mountPath: /usr/share/nginx/html/
+      volumes:
+      - name: nginx-index-file
+        configMap:
+          name: index-html-configmap
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-service
+  namespace: default
+spec:
+  selector:
+    app: nginx
+  type: NodePort
+  ports:
+    - port: 80
+      nodePort: 32000
+      targetPort: 80
+  
