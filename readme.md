@@ -878,7 +878,7 @@ We have created a number of pods which should all be running. If you have follow
 
 #### Deleting a pod by name
 
-Let's first delele `kubia-gpu` pod name
+Let's first delete `kubia-gpu` pod name
 
 `kubectl delete po kubia-gpu`
 
@@ -1032,7 +1032,7 @@ indefinitely).
 
 You can see why the container had to be restarted by looking at what `kubectl describe` prints out. You can see that the container is currently running, but it previously terminated because of an error. The `exit code` was **137**, which has a special meaning. It denotes that the process was terminated by an external signal. The number 137 is a sum of two numbers: `128+x`, where x is the signal number sent to the process that caused it to terminate.
 
-In the example, `x equals 9`, which is the number of the `SIGKILL` signal, meaning the process was killed forcibly. When a container a killed, a completely new container is created it's not the same container being restarted again.
+In the example, `x equals 9`, which is the number of the `SIGKILL` signal, meaning the process was killed forcibly. When a container is killed, a completely new container is created it's not the same container being restarted again.
 
 #### Configuring additional properties of liveness probe
 
