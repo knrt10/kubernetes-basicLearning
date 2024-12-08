@@ -1482,7 +1482,7 @@ Kubernetes includes support for this through Job resource, which is similar to o
 
 In the event of node failure, pod on that node that are managed by the Job will be reschduled to other nodes the way ReplicaSets are. In the event of a failure of the process itself (when the process returns an error exit code), the Job can be configured to either restart the container or not.
 
-As shown below, it tells how a pod created by a Job is rescheduled to a new node if the node it was initially scheduled to fails. It also shows both a managed pod, which isn’t rescheduled, and a pod backed by a ReplicaSet, which is.
+As shown below, it tells how a pod created by a Job is rescheduled to a new node if the node it was initially scheduled to fails. It also shows both an unmanaged pod, which isn’t rescheduled, and a pod backed by a ReplicaSet, which is.
 
 For example, Jobs are useful for ad hoc tasks, where it’s crucial that the task finishes properly. You could run the task in an unmanaged pod and wait for it to finish, but in the event of a node failing or the pod being evicted from the node while it is performing its task, you’d need to manually recreate it. Doing this manually doesn’t make sense especially if the job takes hours to complete.
 
